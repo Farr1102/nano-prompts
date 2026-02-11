@@ -1,12 +1,9 @@
-import { getPromptData } from "@/lib/parse";
+import { getPromptsData, getAllTags, SOURCE_LABELS } from "@/lib/prompts";
 import PromptList from "@/components/PromptList";
 
 export default async function Home() {
-  const examples = getPromptData();
-
-  const proExamples = examples.filter((e) => e.category === "pro");
-  const bananaExamples = examples.filter((e) => e.category === "banana");
-  const nanoProExamples = examples.filter((e) => e.category === "nano-pro");
+  const { prompts, total, updatedAt } = getPromptsData();
+  const allTags = getAllTags(prompts);
 
   return (
     <main className="min-h-screen">
@@ -16,16 +13,16 @@ export default async function Home() {
             🍌 Nano Banana 提示词库
           </h1>
           <p className="text-stone-400 mt-1 text-sm">
-            精选 {examples.length} 个提示词，支持一键复制
+            共 {total} 个提示词 · 支持标签筛选 · 一键复制
           </p>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <PromptList
-          proExamples={proExamples}
-          bananaExamples={bananaExamples}
-          nanoProExamples={nanoProExamples}
+          prompts={prompts}
+          allTags={allTags}
+          sourceLabels={SOURCE_LABELS}
         />
       </div>
     </main>

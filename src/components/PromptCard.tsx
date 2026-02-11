@@ -1,12 +1,12 @@
 "use client";
 
-import type { PromptExample } from "@/lib/parse";
+import type { PromptItem } from "@/lib/prompts";
 
 export default function PromptCard({
   example,
   onClick,
 }: {
-  example: PromptExample;
+  example: PromptItem;
   onClick: () => void;
 }) {
   return (

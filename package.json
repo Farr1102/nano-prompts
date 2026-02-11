@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/generate-prompts.mjs && next dev",
+    "build": "node scripts/generate-prompts.mjs && next build",
+    "generate": "node scripts/generate-prompts.mjs",
     "start": "next start",
     "lint": "next lint"
   },

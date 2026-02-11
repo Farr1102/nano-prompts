@@ -1,13 +1,13 @@
 "use client";
 
-import type { PromptExample } from "@/lib/parse";
+import type { PromptItem } from "@/lib/prompts";
 import { useState, useEffect } from "react";
 
 export default function DetailModal({
   example,
   onClose,
 }: {
-  example: PromptExample | null;
+  example: PromptItem | null;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -85,6 +85,18 @@ export default function DetailModal({
             <div className="space-y-4">
               {example.author && (
                 <p className="text-sm text-stone-500">by @{example.author}</p>
+              )}
+              {example.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {example.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="px-2 py-0.5 rounded text-xs bg-stone-800 text-stone-400"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
               )}
               {example.input && (
                 <p className="text-sm text-stone-400 border-l-2 border-stone-600 pl-3">
