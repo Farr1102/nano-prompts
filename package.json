@@ -6,6 +6,8 @@
     "dev": "node scripts/generate-prompts.mjs && next dev",
     "build": "node scripts/generate-prompts.mjs && next build",
     "generate": "node scripts/generate-prompts.mjs",
+    "fetch": "node scripts/fetch-sources.mjs",
+    "update": "node scripts/fetch-sources.mjs && node scripts/generate-prompts.mjs",
     "start": "next start",
     "lint": "next lint"
   },

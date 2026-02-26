@@ -61,7 +61,7 @@ export default function PromptList({
     });
   };
 
-  const sourceOrder = ["awesome", "nano-pro", "pro", "banana"];
+  const sourceOrder = ["awesome", "zizheruan", "antigravity", "jimmy", "nano-pro", "pro", "banana"];
 
   return (
     <div className="space-y-8">

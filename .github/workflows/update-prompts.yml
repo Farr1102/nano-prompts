@@ -1,0 +1,39 @@
+name: Update Prompts
+
+on:
+  schedule:
+    # 每周一 8:00 UTC 运行
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+    # 支持手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Fetch sources
+        run: node scripts/fetch-sources.mjs
+
+      - name: Generate prompts
+        run: npm run generate
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet public/prompts.json data.md nano-pro.md new.md || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.md nano-pro.md new.md public/prompts.json
+          git commit -m "chore: auto-update prompts from GitHub sources"
+          git push

@@ -3,7 +3,7 @@ export interface PromptItem {
   title: string;
   author: string;
   link?: string;
-  source: "pro" | "banana" | "nano-pro" | "awesome";
+  source: "pro" | "banana" | "nano-pro" | "awesome" | "zizheruan" | "antigravity" | "jimmy";
   tags: string[];
   input?: string;
   prompt: string;
@@ -45,6 +45,9 @@ export const SOURCE_LABELS: Record<string, string> = {
   banana: "Nano Banana",
   "nano-pro": "Awesome Nano Pro",
   awesome: "YouMind Awesome",
+  zizheruan: "ZizheRuan 案例",
+  antigravity: "Antigravity 900+",
+  jimmy: "JimmyLv 精选",
 };
 
 export function getAllTags(prompts: PromptItem[]): string[] {

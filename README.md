@@ -4,24 +4,51 @@
 
 ## 数据源
 
-- **data.md** - PicoTrex Awesome-Nano-Banana-images（Pro + Banana）
-- **nano-pro.md** - ZeroLu awesome-nanobanana-pro
-- **new.md** - YouMind awesome-nano-banana-pro-prompts
+| 文件 | 来源 |
+|------|------|
+| data.md | [PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images) |
+| nano-pro.md | [ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro) |
+| new.md | [YouMind-OpenLab/awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts) |
+| zizheruan.md | [ZizheRuan/awesome-nano-banana-pro-prompts-and-examples](https://github.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples) |
+| antigravity.md | [devanshug2307/Awesome-Nano-Banana-Prompts](https://github.com/devanshug2307/Awesome-Nano-Banana-Prompts) |
+| jimmy.md | [JimmyLv/awesome-nano-banana](https://github.com/JimmyLv/awesome-nano-banana) |
+
+## 自动化更新
+
+### 方式一：GitHub Actions（推荐）
+
+推送代码到 GitHub 后，每周一自动从上游拉取最新内容并更新。
+
+- 定时：每周一 8:00 UTC
+- 手动：Actions → Update Prompts → Run workflow
+
+### 方式二：本地命令
+
+```bash
+# 从 GitHub 拉取最新 md 并生成 prompts.json
+npm run update
+
+# 仅拉取（不生成）
+npm run fetch
+
+# 仅生成（使用本地 md）
+npm run generate
+```
+
+### 新增数据源
+
+编辑 `scripts/sources.config.json`，添加新的 source 后需在 `generate-prompts.mjs` 中实现对应 parser。
 
 ## 开发
 
 ```bash
-# 生成 prompts.json（解析三个 md 文件）
-npm run generate
-
-# 开发
-npm run dev
-
-# 构建（自动先执行 generate）
-npm run build
+npm run dev    # 开发（自动 generate）
+npm run build  # 构建（自动 generate）
 ```
 
 ## 结构
 
-- `public/prompts.json` - 统一 JSON 数据，含 tags 字段
-- `scripts/generate-prompts.mjs` - 生成脚本
+- `scripts/sources.config.json` - 数据源配置
+- `scripts/fetch-sources.mjs` - 从 GitHub 拉取
+- `scripts/generate-prompts.mjs` - 解析并生成 JSON
+- `public/prompts.json` - 统一 JSON 输出

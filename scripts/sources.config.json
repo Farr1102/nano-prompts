@@ -1,0 +1,46 @@
+{
+  "sources": [
+    {
+      "id": "data",
+      "name": "PicoTrex Awesome-Nano-Banana-images",
+      "url": "https://raw.githubusercontent.com/PicoTrex/Awesome-Nano-Banana-images/main/README.md",
+      "output": "data.md",
+      "parser": "data"
+    },
+    {
+      "id": "nano-pro",
+      "name": "ZeroLu awesome-nanobanana-pro",
+      "url": "https://raw.githubusercontent.com/ZeroLu/awesome-nanobanana-pro/main/README.md",
+      "output": "nano-pro.md",
+      "parser": "nano-pro"
+    },
+    {
+      "id": "awesome",
+      "name": "YouMind awesome-nano-banana-pro-prompts",
+      "url": "https://raw.githubusercontent.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts/main/README.md",
+      "output": "new.md",
+      "parser": "awesome"
+    },
+    {
+      "id": "zizheruan",
+      "name": "ZizheRuan awesome-nano-banana-pro-prompts-and-examples",
+      "url": "https://raw.githubusercontent.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples/main/README.md",
+      "output": "zizheruan.md",
+      "parser": "zizheruan"
+    },
+    {
+      "id": "antigravity",
+      "name": "devanshug2307 Awesome-Nano-Banana-Prompts",
+      "url": "https://raw.githubusercontent.com/devanshug2307/Awesome-Nano-Banana-Prompts/main/README.md",
+      "output": "antigravity.md",
+      "parser": "nano-pro"
+    },
+    {
+      "id": "jimmy",
+      "name": "JimmyLv awesome-nano-banana",
+      "url": "https://raw.githubusercontent.com/JimmyLv/awesome-nano-banana/main/README.md",
+      "output": "jimmy.md",
+      "parser": "jimmy"
+    }
+  ]
+}

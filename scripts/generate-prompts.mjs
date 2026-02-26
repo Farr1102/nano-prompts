@@ -100,9 +100,17 @@ function parseNanoPro(content) {
       }
     }
 
+    let imageUrl;
     const imgMatches = [...part.matchAll(/<img[^>]+src="(https?:\/\/[^"]+)"[^>]*(?:alt="([^"]*)")?[^>]*>/g)];
     const generatedImg = imgMatches.find((m) => /generated|输出|result/i.test(m[2] || ""));
-    const imageUrl = generatedImg?.[1] ?? imgMatches[0]?.[1];
+    imageUrl = generatedImg?.[1] ?? imgMatches[0]?.[1];
+    if (!imageUrl) {
+      const mdImg = part.match(/!\[[^\]]*\]\((https?:\/\/[^)]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^)]*)?)\)/);
+      imageUrl = mdImg ? mdImg[1] : undefined;
+    }
+    if (imageUrl && imageUrl.includes("pbs.twimg.com") && !imageUrl.includes(":")) {
+      imageUrl = imageUrl.replace(/\.(jpg|png|webp)(\?|$)/, ".$1:large$2");
+    }
     const subtitleMatch = part.match(/^\*([^*]+)\*/m);
     const note = subtitleMatch ? subtitleMatch[1].trim() : undefined;
 
@@ -113,6 +121,86 @@ function parseNanoPro(content) {
       link,
       source: "nano-pro",
       tags: ["nano-pro"],
+      prompt,
+      note,
+      imageUrl,
+    });
+  }
+  return examples;
+}
+
+// 解析 zizheruan.md (Case N: 格式)
+function parseZizheruan(content) {
+  const examples = [];
+  const parts = content.split(/(?=### Case \d+:)/).filter(Boolean);
+
+  for (const part of parts) {
+    const headerMatch = part.match(/^### Case (\d+):\s*\[([^\]]+)\]\((https?:\/\/[^)]+)\)[（(]by\s+\[@?([^\]]+)\]\((https?:\/\/[^)]+)\)[）)]/);
+    if (!headerMatch) continue;
+
+    const num = headerMatch[1];
+    const title = headerMatch[2].trim();
+    const link = headerMatch[3];
+    const author = headerMatch[4].replace(/^@/, "");
+
+    const promptMatch = part.match(/\*\*prompt:\*\*\s*```\s*\n([\s\S]*?)```/);
+    const prompt = promptMatch ? promptMatch[1].trim() : "";
+    if (!prompt) continue;
+
+    const imgMatch = part.match(/<img[^>]+src="(https?:\/\/[^"]+)"[^>]*>/);
+    let imageUrl = imgMatch ? imgMatch[1] : undefined;
+    if (!imageUrl) {
+      const relImg = part.match(/<img[^>]+src="(images\/[^"]+)"[^>]*>/);
+      if (relImg) imageUrl = "https://raw.githubusercontent.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples/main/" + relImg[1];
+    }
+
+    examples.push({
+      id: `zizheruan-${num}`,
+      title,
+      author,
+      link,
+      source: "zizheruan",
+      tags: ["zizheruan"],
+      prompt,
+      imageUrl,
+    });
+  }
+  return examples;
+}
+
+// 解析 jimmy.md (Case N: Title (by @author) 格式)
+function parseJimmy(content) {
+  const examples = [];
+  const parts = content.split(/(?=### Case \d+:)/).filter(Boolean);
+
+  for (const part of parts) {
+    const headerMatch = part.match(/^### Case (\d+):\s*(.+?)\s*\(by\s+\[@?([^\]]+)\]\((https?:\/\/[^)]+)\)\)/);
+    if (!headerMatch) continue;
+
+    const num = headerMatch[1];
+    const title = headerMatch[2].trim();
+    const author = headerMatch[3].replace(/^@/, "");
+    const link = headerMatch[4];
+
+    const promptMatch = part.match(/\*\*Prompt\*\*\s*\n```\s*\n([\s\S]*?)```/);
+    const prompt = promptMatch ? promptMatch[1].trim() : "";
+    if (!prompt) continue;
+
+    const imgMatches = [...part.matchAll(/<img[^>]+src="(https?:\/\/[^"]+)"[^>]*>/g)];
+    const geminiImg = imgMatches.find((m) => /gemini|chatimg|chatvid/i.test(m[1]));
+    const otherImg = imgMatches.find((m) => !/shields\.io|badge|favicon/i.test(m[1]));
+    const imageUrl = geminiImg?.[1] ?? otherImg?.[1];
+
+    const noteMatch = part.match(/\*Note:([^*]+)\*/);
+    const note = noteMatch ? noteMatch[1].trim() : undefined;
+
+    examples.push({
+      id: `jimmy-${num}`,
+      title,
+      author,
+      link,
+      source: "jimmy",
+      tags: ["jimmy"],
       prompt,
       note,
       imageUrl,
@@ -181,32 +269,37 @@ function parseNewMd(content) {
 }
 
 // 主流程
+const SOURCE_ORDER = [
+  { file: "data.md", parser: parseDataMd },
+  { file: "nano-pro.md", parser: parseNanoPro },
+  { file: "new.md", parser: parseNewMd },
+  { file: "zizheruan.md", parser: parseZizheruan },
+  { file: "antigravity.md", parser: parseNanoPro },
+  { file: "jimmy.md", parser: parseJimmy },
+];
+
 function main() {
   const all = [];
   let idCounter = 1;
 
-  const dataPath = path.join(ROOT, "data.md");
-  if (fs.existsSync(dataPath)) {
-    const items = parseDataMd(fs.readFileSync(dataPath, "utf-8"));
-    all.push(...items);
-  }
+  for (const { file, parser } of SOURCE_ORDER) {
+    const filePath = path.join(ROOT, file);
+    if (!fs.existsSync(filePath)) continue;
 
-  const nanoProPath = path.join(ROOT, "nano-pro.md");
-  if (fs.existsSync(nanoProPath)) {
-    const items = parseNanoPro(fs.readFileSync(nanoProPath, "utf-8"));
-    all.push(...items);
-  }
+    const content = fs.readFileSync(filePath, "utf-8");
+    let items = parser(content);
 
-  const newPath = path.join(ROOT, "new.md");
-  if (fs.existsSync(newPath)) {
-    const items = parseNewMd(fs.readFileSync(newPath, "utf-8"));
+    if (file === "antigravity.md") {
+      items = items.map((item) => ({ ...item, source: "antigravity", id: item.id.replace("nano-pro-", "antigravity-"), tags: ["antigravity"] }));
+    }
+
     const seen = new Set(all.map((x) => x.id));
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      let id = `awesome-${i + 1}`;
-      while (seen.has(id)) id = `awesome-${idCounter++}`;
-      item.id = id;
-      seen.add(id);
+      if (!item.id || seen.has(item.id)) {
+        item.id = `${item.source}-${idCounter++}`;
+      }
+      seen.add(item.id);
       all.push(item);
     }
   }
