@@ -46,6 +46,7 @@ npm run dev    # 开发（自动 generate）
 npm run build  # 构建（自动 generate）
 ```
 
+
 ## 结构
 
 - `scripts/sources.config.json` - 数据源配置
