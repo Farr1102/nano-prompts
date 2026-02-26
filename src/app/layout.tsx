@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 export default async function RootLayout({
@@ -14,6 +15,7 @@ export default async function RootLayout({
     <html lang={lang}>
       <body className="antialiased bg-stone-950 text-stone-100 min-h-screen">
         {children}
+        <Analytics />
       </body>
     </html>
   );

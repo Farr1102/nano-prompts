@@ -49,8 +49,15 @@ npm run build  # 构建（自动 generate）
 ## SEO 与多语言
 
 - **路由**：`/zh` 中文、`/en` 英文，根路径 `/` 根据 Accept-Language 重定向
-- **SEO**：metadata、Open Graph、Twitter Card、sitemap.xml、robots.txt、hreflang
+- **SEO**：metadata、Open Graph、Twitter Card、sitemap.xml、robots.txt、hreflang、单条提示词页 `/p/[id]`
 - **部署**：在 Vercel 等平台设置 `NEXT_PUBLIC_SITE_URL`（如 `https://your-domain.com`）以生成正确的 canonical 与 sitemap
+
+## 功能特性
+
+- 搜索防抖、URL 可分享（`?q=xxx&tags=a,b&p=id`）
+- 标签展开/收起、分区「显示更多」
+- 图片懒加载与 Next/Image 优化
+- 无障碍（a11y）、Vercel Analytics
 
 ## 结构
 

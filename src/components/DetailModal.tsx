@@ -1,20 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import type { PromptItem } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function DetailModal({
   example,
   onClose,
   locale,
+  localePath,
 }: {
   example: PromptItem | null;
   onClose: () => void;
   locale: Locale;
+  localePath?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const prevActive = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -26,7 +31,17 @@ export default function DetailModal({
 
   useEffect(() => {
     if (example) {
+      prevActive.current = document.activeElement as HTMLElement | null;
       document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => {
+        const focusable = contentRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable?.focus();
+      });
+    } else {
+      document.body.style.overflow = "";
+      prevActive.current?.focus?.();
     }
     return () => {
       document.body.style.overflow = "";
@@ -54,18 +69,35 @@ export default function DetailModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
+        ref={contentRef}
         className="bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-700">
-          <h2 className="text-lg font-semibold text-stone-100 truncate pr-4">
+          <h2
+            id="modal-title"
+            className="text-lg font-semibold text-stone-100 truncate pr-4"
+          >
             {example.title}
           </h2>
           <div className="flex items-center gap-2 shrink-0">
+            {localePath && example && (
+              <Link
+                href={`/${localePath}/p/${example.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-stone-400 hover:text-amber-400 hover:bg-stone-800 border border-stone-700"
+              >
+                {t(locale, "openInNewTab")}
+              </Link>
+            )}
             <button
               onClick={handleCopy}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
@@ -92,12 +124,12 @@ export default function DetailModal({
               )}
               {example.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {example.tags.map((t) => (
+                  {example.tags.map((tag) => (
                     <span
-                      key={t}
+                      key={tag}
                       className="px-2 py-0.5 rounded text-xs bg-stone-800 text-stone-400"
                     >
-                      {t}
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -124,6 +156,7 @@ export default function DetailModal({
               <img
                 src={example.imageUrl}
                 alt={example.title}
+                referrerPolicy="no-referrer"
                 className="w-full rounded-lg object-contain max-h-[60vh]"
               />
             ) : (

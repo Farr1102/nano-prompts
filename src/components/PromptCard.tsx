@@ -21,11 +21,22 @@ export default function PromptCard({
     >
       <div className="aspect-[4/3] bg-stone-950 relative overflow-hidden">
         {example.imageUrl ? (
-          <img
-            src={example.imageUrl}
-            alt={example.title}
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-          />
+          <>
+            <img
+              src={example.imageUrl}
+              alt={example.title}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                (e.currentTarget.nextElementSibling as HTMLElement)?.classList.remove("hidden");
+              }}
+            />
+            <div className="hidden absolute inset-0 flex items-center justify-center text-stone-600 text-4xl bg-stone-950">
+              🖼️
+            </div>
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-600 text-4xl">
             🖼️

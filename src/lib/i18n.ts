@@ -16,6 +16,12 @@ export const translations = {
     input: "输入：",
     noImage: "暂无示例图",
     by: "by",
+    noResults: "暂无匹配结果，试试调整搜索或标签",
+    errorLoading: "数据加载失败，请稍后重试",
+    expandTags: "展开更多标签",
+    collapseTags: "收起标签",
+    openInNewTab: "新标签页打开",
+    showMore: "显示更多",
   },
   en: {
     title: "Nano Banana Prompts",
@@ -31,6 +37,12 @@ export const translations = {
     input: "Input:",
     noImage: "No sample image",
     by: "by",
+    noResults: "No results. Try adjusting search or tags.",
+    errorLoading: "Failed to load data. Please try again later.",
+    expandTags: "Show more tags",
+    collapseTags: "Collapse tags",
+    openInNewTab: "Open in new tab",
+    showMore: "Show more",
   },
 } as const;
 
