@@ -1,14 +1,18 @@
 "use client";
 
 import type { PromptItem } from "@/lib/prompts";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 
 export default function DetailModal({
   example,
   onClose,
+  locale,
 }: {
   example: PromptItem | null;
   onClose: () => void;
+  locale: Locale;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -66,12 +70,12 @@ export default function DetailModal({
               onClick={handleCopy}
               className="px-4 py-2 rounded-lg text-sm font-medium bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30"
             >
-              {copied ? "✓ 已复制" : "复制提示词"}
+              {copied ? `✓ ${t(locale, "copied")}` : t(locale, "copyPrompt")}
             </button>
             <button
               onClick={onClose}
               className="p-2 rounded-lg text-stone-400 hover:text-stone-100 hover:bg-stone-800"
-              aria-label="关闭"
+              aria-label={t(locale, "close")}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -84,7 +88,7 @@ export default function DetailModal({
           <div className="flex-1 overflow-y-auto p-6 md:border-r border-stone-700 min-h-0">
             <div className="space-y-4">
               {example.author && (
-                <p className="text-sm text-stone-500">by @{example.author}</p>
+                <p className="text-sm text-stone-500">{t(locale, "by")} @{example.author}</p>
               )}
               {example.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -100,7 +104,7 @@ export default function DetailModal({
               )}
               {example.input && (
                 <p className="text-sm text-stone-400 border-l-2 border-stone-600 pl-3">
-                  <span className="text-stone-500">输入：</span>
+                  <span className="text-stone-500">{t(locale, "input")}</span>
                   {example.input}
                 </p>
               )}
@@ -124,7 +128,7 @@ export default function DetailModal({
               />
             ) : (
               <div className="w-full aspect-square rounded-lg bg-stone-800 flex items-center justify-center text-stone-500 text-sm">
-                暂无示例图
+                {t(locale, "noImage")}
               </div>
             )}
           </div>

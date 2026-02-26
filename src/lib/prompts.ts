@@ -40,16 +40,6 @@ export function getPromptsData(): PromptsData {
   return data;
 }
 
-export const SOURCE_LABELS: Record<string, string> = {
-  pro: "Nano Banana Pro",
-  banana: "Nano Banana",
-  "nano-pro": "Awesome Nano Pro",
-  awesome: "YouMind Awesome",
-  zizheruan: "ZizheRuan 案例",
-  antigravity: "Antigravity 900+",
-  jimmy: "JimmyLv 精选",
-};
-
 export function getAllTags(prompts: PromptItem[]): string[] {
   const set = new Set<string>();
   for (const p of prompts) {

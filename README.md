@@ -46,6 +46,11 @@ npm run dev    # 开发（自动 generate）
 npm run build  # 构建（自动 generate）
 ```
 
+## SEO 与多语言
+
+- **路由**：`/zh` 中文、`/en` 英文，根路径 `/` 根据 Accept-Language 重定向
+- **SEO**：metadata、Open Graph、Twitter Card、sitemap.xml、robots.txt、hreflang
+- **部署**：在 Vercel 等平台设置 `NEXT_PUBLIC_SITE_URL`（如 `https://your-domain.com`）以生成正确的 canonical 与 sitemap
 
 ## 结构
 

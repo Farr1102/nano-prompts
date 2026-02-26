@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import type { PromptItem } from "@/lib/prompts";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import PromptCard from "./PromptCard";
 import SearchBar from "./SearchBar";
 import DetailModal from "./DetailModal";
@@ -10,10 +12,12 @@ export default function PromptList({
   prompts,
   allTags,
   sourceLabels,
+  locale,
 }: {
   prompts: PromptItem[];
   allTags: string[];
   sourceLabels: Record<string, string>;
+  locale: Locale;
 }) {
   const [keyword, setKeyword] = useState("");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
@@ -66,7 +70,7 @@ export default function PromptList({
   return (
     <div className="space-y-8">
       <div className="sticky top-[73px] z-10 -mx-4 px-4 py-3 bg-stone-950/95 backdrop-blur-sm border-b border-stone-800 space-y-3">
-        <SearchBar onSearch={setKeyword} />
+        <SearchBar onSearch={setKeyword} locale={locale} />
 
         <div className="flex flex-wrap gap-2">
           {allTags.slice(0, 32).map((tag) => (
@@ -85,21 +89,21 @@ export default function PromptList({
           ))}
           {allTags.length > 32 && (
             <span className="text-stone-500 text-xs py-1">
-              +{allTags.length - 32} 更多
+              +{allTags.length - 32} {t(locale, "moreTags")}
             </span>
           )}
         </div>
       </div>
 
       <p className="text-sm text-stone-500">
-        筛选结果：{filtered.length} 个
+        {t(locale, "filterResult", { count: String(filtered.length) })}
         {selectedTags.size > 0 && (
           <button
             type="button"
             onClick={() => setSelectedTags(new Set())}
             className="ml-2 text-amber-400 hover:underline"
           >
-            清除标签
+            {t(locale, "clearTags")}
           </button>
         )}
       </p>
@@ -120,6 +124,7 @@ export default function PromptList({
                   key={example.id}
                   example={example}
                   onClick={() => setSelected(example)}
+                  locale={locale}
                 />
               ))}
             </div>
@@ -127,7 +132,7 @@ export default function PromptList({
         );
       })}
 
-      <DetailModal example={selected} onClose={() => setSelected(null)} />
+      <DetailModal example={selected} onClose={() => setSelected(null)} locale={locale} />
     </div>
   );
 }

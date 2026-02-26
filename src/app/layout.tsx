@@ -1,18 +1,17 @@
-import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Nano Banana 提示词库",
-  description: "Nano Banana 与 Nano Banana Pro 精选提示词集合，支持一键复制",
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const locale = headersList.get("x-locale") || "zh";
+  const lang = locale === "en" ? "en" : "zh-CN";
+
   return (
-    <html lang="zh-CN">
+    <html lang={lang}>
       <body className="antialiased bg-stone-950 text-stone-100 min-h-screen">
         {children}
       </body>

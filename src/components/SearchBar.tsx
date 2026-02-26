@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 export default function SearchBar({
   onSearch,
+  locale,
 }: {
   onSearch: (keyword: string) => void;
+  locale: Locale;
 }) {
   const [value, setValue] = useState("");
 
@@ -13,7 +17,7 @@ export default function SearchBar({
     <div className="relative">
       <input
         type="text"
-        placeholder="搜索提示词..."
+        placeholder={t(locale, "searchPlaceholder")}
         value={value}
         onChange={(e) => {
           setValue(e.target.value);

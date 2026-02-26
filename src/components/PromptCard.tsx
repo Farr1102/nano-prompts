@@ -1,13 +1,17 @@
 "use client";
 
 import type { PromptItem } from "@/lib/prompts";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 export default function PromptCard({
   example,
   onClick,
+  locale,
 }: {
   example: PromptItem;
   onClick: () => void;
+  locale: Locale;
 }) {
   return (
     <button
@@ -34,7 +38,7 @@ export default function PromptCard({
         </h3>
         {example.author && (
           <p className="text-sm text-stone-500 mt-1 truncate">
-            by @{example.author}
+            {t(locale, "by")} @{example.author}
           </p>
         )}
       </div>
