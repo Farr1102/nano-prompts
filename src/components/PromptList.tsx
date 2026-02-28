@@ -91,7 +91,8 @@ export default function PromptList({
 
   const openPrompt = (item: PromptItem | null) => {
     setSelected(item);
-    updateUrl({ p: item?.id ?? undefined });
+    // Pass empty string when closing so `p` is explicitly removed from URL.
+    updateUrl({ p: item?.id ?? "" });
   };
 
   const filtered = useMemo(() => {
