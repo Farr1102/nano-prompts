@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { PromptItem } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
@@ -36,6 +36,7 @@ export default function PromptList({
   const [selected, setSelected] = useState<PromptItem | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const pendingPRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     setKeyword(qFromUrl);
@@ -43,13 +44,23 @@ export default function PromptList({
   }, [qFromUrl, tagsFromUrl.join(",")]);
 
   useEffect(() => {
+    // Ignore stale URL updates while a newer open/close action is pending.
+    if (pendingPRef.current !== undefined && pFromUrl !== pendingPRef.current) return;
+    if (pendingPRef.current !== undefined && pFromUrl === pendingPRef.current) {
+      pendingPRef.current = undefined;
+    }
+
     const item = pFromUrl ? prompts.find((x) => x.id === pFromUrl) : null;
     setSelected(item ?? null);
   }, [pFromUrl, prompts]);
 
   const updateUrl = useCallback(
     (updates: { q?: string; tags?: string[]; p?: string }) => {
-      const params = new URLSearchParams(searchParams.toString());
+      // Always build from real-time location to avoid race conditions
+      // when multiple router.replace calls happen quickly.
+      const params = new URLSearchParams(
+        typeof window !== "undefined" ? window.location.search : searchParams.toString()
+      );
       if (updates.q !== undefined) {
         if (updates.q) params.set("q", updates.q);
         else params.delete("q");
@@ -90,6 +101,7 @@ export default function PromptList({
   };
 
   const openPrompt = (item: PromptItem | null) => {
+    pendingPRef.current = item?.id ?? "";
     setSelected(item);
     // Pass empty string when closing so `p` is explicitly removed from URL.
     updateUrl({ p: item?.id ?? "" });
