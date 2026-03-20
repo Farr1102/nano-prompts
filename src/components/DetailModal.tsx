@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { PromptItem } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
+import { remoteImageIsOptimizable } from "@/lib/remote-image";
 import { useState, useEffect, useRef } from "react";
 
 export default function DetailModal({
@@ -18,6 +20,7 @@ export default function DetailModal({
   localePath?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const prevActive = useRef<HTMLElement | null>(null);
 
@@ -28,6 +31,10 @@ export default function DetailModal({
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose]);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [example?.id, example?.imageUrl]);
 
   useEffect(() => {
     if (example) {
@@ -152,13 +159,28 @@ export default function DetailModal({
           </div>
 
           <div className="w-full md:w-80 shrink-0 p-6 flex flex-col items-center justify-start bg-stone-950/50 border-t md:border-t-0 md:border-l border-stone-700">
-            {example.imageUrl ? (
-              <img
-                src={example.imageUrl}
-                alt={example.title}
-                referrerPolicy="no-referrer"
-                className="w-full rounded-lg object-contain max-h-[60vh]"
-              />
+            {example.imageUrl && !imageFailed ? (
+              remoteImageIsOptimizable(example.imageUrl) ? (
+                <Image
+                  src={example.imageUrl}
+                  alt={example.title}
+                  width={800}
+                  height={800}
+                  quality={75}
+                  referrerPolicy="no-referrer"
+                  className="w-full max-h-[60vh] h-auto rounded-lg object-contain"
+                  onError={() => setImageFailed(true)}
+                />
+              ) : (
+                <img
+                  src={example.imageUrl}
+                  alt={example.title}
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  className="w-full rounded-lg object-contain max-h-[60vh]"
+                  onError={() => setImageFailed(true)}
+                />
+              )
             ) : (
               <div className="w-full aspect-square rounded-lg bg-stone-800 flex items-center justify-center text-stone-500 text-sm">
                 {t(locale, "noImage")}

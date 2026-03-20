@@ -155,6 +155,8 @@ export default function PromptList({
             <button
               key={tag}
               type="button"
+              aria-pressed={selectedTags.has(tag)}
+              title={t(locale, "filterByTag", { tag })}
               onClick={() => toggleTag(tag)}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                 selectedTags.has(tag)

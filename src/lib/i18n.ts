@@ -22,6 +22,9 @@ export const translations = {
     collapseTags: "收起标签",
     openInNewTab: "新标签页打开",
     showMore: "显示更多",
+    openPromptAria: "查看提示词：{title}{suffix}",
+    openPromptAriaAuthorSuffix: "，作者 @{author}",
+    filterByTag: "按标签筛选：{tag}",
   },
   en: {
     title: "Nano Banana Prompts",
@@ -43,6 +46,9 @@ export const translations = {
     collapseTags: "Collapse tags",
     openInNewTab: "Open in new tab",
     showMore: "Show more",
+    openPromptAria: "View prompt: {title}{suffix}",
+    openPromptAriaAuthorSuffix: ", by @{author}",
+    filterByTag: "Filter by tag: {tag}",
   },
 } as const;
 

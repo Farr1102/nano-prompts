@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getPromptsData } from "@/lib/prompts";
+import { remoteImageIsOptimizable } from "@/lib/remote-image";
 import { getSiteBaseUrl } from "@/lib/site";
 import { sourceLabels, t, type Locale } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
@@ -198,10 +200,22 @@ export default async function PromptPage({
               )}
             </div>
             <div className="relative aspect-square w-full">
-              {item.imageUrl ? (
+              {item.imageUrl && remoteImageIsOptimizable(item.imageUrl) ? (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  quality={80}
+                  priority
+                  referrerPolicy="no-referrer"
+                  className="object-contain rounded-lg"
+                />
+              ) : item.imageUrl ? (
                 <img
                   src={item.imageUrl}
                   alt={item.title}
+                  decoding="async"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-contain rounded-lg"
                 />
