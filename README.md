@@ -50,7 +50,12 @@ npm run build  # 构建（自动 generate）
 
 - **路由**：`/zh` 中文、`/en` 英文，根路径 `/` 根据 Accept-Language 重定向
 - **SEO**：metadata、Open Graph、Twitter Card、sitemap.xml、robots.txt、hreflang、单条提示词页 `/p/[id]`
-- **部署**：在 Vercel 等平台设置 `NEXT_PUBLIC_SITE_URL`（如 `https://your-domain.com`）以生成正确的 canonical 与 sitemap
+- **部署（Vercel）**
+  1. 将仓库接入 Vercel，Framework Preset 选 **Next.js**（默认即可）。
+  2. **Build Command** 保持默认 `npm run build`（会先执行 `generate-prompts.mjs`，与本地一致）。
+  3. 在 **Project → Settings → Environment Variables** 为 **Production**（以及 Preview 若需要）设置：
+     - `NEXT_PUBLIC_SITE_URL` = 站点根地址，例如 `https://your-domain.vercel.app` 或自定义域名（须含 `https://`）。用于 canonical、hreflang、sitemap、JSON-LD 中的绝对 URL。
+  4. 合并进 `main` 后由 Vercel 自动构建部署；本仓库的 **GitHub Actions「CI」** 会在 push/PR 上跑 `tsc` 与 `npm test`（与 Vercel 构建互补，不重复全量静态页生成）。
 
 ## 功能特性
 

@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getPromptsData } from "@/lib/prompts";
+import { getSiteBaseUrl } from "@/lib/site";
 import { sourceLabels, t, type Locale } from "@/lib/i18n";
 import LangSwitcher from "@/components/LangSwitcher";
 
@@ -19,18 +22,59 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string; id: string }>;
-}) {
+}): Promise<Metadata> {
   const { locale, id } = await params;
   const { prompts } = getPromptsData();
   const item = prompts.find((p) => p.id === id);
-  if (!item) return { title: "Not Found" };
+  if (!item) {
+    return {
+      title: "Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
 
   const loc = (locale === "en" ? "en" : "zh") as Locale;
+  const isEn = loc === "en";
   const title = `${item.title} - ${t(loc, "title")}`;
+  const description = item.prompt.replace(/\s+/g, " ").trim().slice(0, 160);
+  const baseUrl = getSiteBaseUrl();
+  const canonical = `${baseUrl}/${loc}/p/${item.id}`;
+  const image = item.imageUrl ? [item.imageUrl] : undefined;
 
   return {
     title,
-    description: item.prompt.slice(0, 160),
+    description,
+    keywords: [...item.tags, item.source, "Nano Banana", "AI prompt", "prompt library"],
+    alternates: {
+      canonical,
+      languages: {
+        "zh-CN": `${baseUrl}/zh/p/${item.id}`,
+        en: `${baseUrl}/en/p/${item.id}`,
+        "x-default": `${baseUrl}/en/p/${item.id}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "article",
+      siteName: isEn ? "Nano Banana Prompts" : "Nano Banana 提示词库",
+      locale: isEn ? "en_US" : "zh_CN",
+      images: image,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 
@@ -43,13 +87,65 @@ export default async function PromptPage({
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const { prompts } = getPromptsData();
   const item = prompts.find((p) => p.id === id);
+  const baseUrl = getSiteBaseUrl();
 
   if (!item) notFound();
 
   const labels = sourceLabels[loc];
+  const detailUrl = `${baseUrl}/${loc}/p/${item.id}`;
+  const listUrl = `${baseUrl}/${loc}`;
+
+  const creativeWorkJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: item.title,
+    description: item.prompt.replace(/\s+/g, " ").trim().slice(0, 200),
+    inLanguage: loc === "en" ? "en" : "zh-CN",
+    keywords: item.tags,
+    url: detailUrl,
+    image: item.imageUrl || undefined,
+    author: item.author
+      ? {
+          "@type": "Person",
+          name: item.author,
+        }
+      : undefined,
+    isPartOf: {
+      "@type": "CollectionPage",
+      name: t(loc, "title"),
+      url: listUrl,
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: t(loc, "title"),
+        item: listUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: item.title,
+        item: detailUrl,
+      },
+    ],
+  };
 
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLdForScript(creativeWorkJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLdForScript(breadcrumbJsonLd) }}
+      />
       <header className="border-b border-stone-800 bg-stone-900/50 sticky top-0 z-10 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">

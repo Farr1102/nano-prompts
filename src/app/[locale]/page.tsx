@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { getPromptsData, getAllTags } from "@/lib/prompts";
+import { serializeJsonLdForScript } from "@/lib/json-ld";
+import { getSiteBaseUrl } from "@/lib/site";
 import { sourceLabels, t, type Locale } from "@/lib/i18n";
 import PromptList from "@/components/PromptList";
 import LangSwitcher from "@/components/LangSwitcher";
@@ -13,6 +15,8 @@ export default async function Home({
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const data = getPromptsData();
   const { prompts, total } = data;
+  const baseUrl = getSiteBaseUrl();
+  const pageUrl = `${baseUrl}/${loc}`;
 
   if (!prompts?.length) {
     return (
@@ -34,9 +38,27 @@ export default async function Home({
 
   const allTags = getAllTags(prompts);
   const labels = sourceLabels[loc];
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: t(loc, "title"),
+    description: t(loc, "subtitle", { total: String(total) }),
+    inLanguage: loc === "en" ? "en" : "zh-CN",
+    url: pageUrl,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Nano Banana Prompts",
+      url: baseUrl,
+    },
+    numberOfItems: total,
+  };
 
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLdForScript(collectionJsonLd) }}
+      />
       <header className="border-b border-stone-800 bg-stone-900/50 sticky top-0 z-10 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-4">

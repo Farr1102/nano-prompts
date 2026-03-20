@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { locales } from "@/lib/i18n";
+import { getSiteBaseUrl } from "@/lib/site";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -20,7 +21,7 @@ export async function generateMetadata({
     ? "Curated prompts for Nano Banana & Nano Banana Pro. Search, filter by tags, one-click copy."
     : "Nano Banana 与 Nano Banana Pro 精选提示词集合，支持搜索、标签筛选、一键复制";
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nano-banana-prompts.vercel.app";
+  const baseUrl = getSiteBaseUrl();
   const canonical = locale === "zh" ? `${baseUrl}/zh` : `${baseUrl}/en`;
 
   return {
@@ -47,6 +48,7 @@ export async function generateMetadata({
       languages: {
         "zh-CN": `${baseUrl}/zh`,
         en: `${baseUrl}/en`,
+        "x-default": `${baseUrl}/en`,
       },
     },
     robots: {
