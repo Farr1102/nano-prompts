@@ -1,3 +1,5 @@
+## 🎬 NEW! Check out [Awesome Happy Horse 1.0](https://github.com/ZeroLu/awesome-happy-horse) — The Hottest AI Video Model of April 2026! 🚀
+
 #### Please also check out 👉 [this awesome repo of Seedance 2.0 prompts!](https://github.com/ZeroLu/awesome-seedance) 👈
 
 # Awesome Nano Banana Pro 🍌
