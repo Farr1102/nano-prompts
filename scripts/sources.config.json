@@ -41,6 +41,20 @@
       "url": "https://raw.githubusercontent.com/ZeroLu/awesome-gpt-image/main/README.md",
       "output": "gpt-image.md",
       "parser": "gpt-image"
+    },
+    {
+      "id": "gpt-image-youmind",
+      "name": "YouMind awesome-gpt-image-2",
+      "url": "https://raw.githubusercontent.com/YouMind-OpenLab/awesome-gpt-image-2/main/README.md",
+      "output": "gpt-image-youmind.md",
+      "parser": "youmind-gpt-image-2"
+    },
+    {
+      "id": "gpt-image-anil",
+      "name": "Anil-matcha Awesome-GPT-Image-2-API-Prompts",
+      "url": "https://raw.githubusercontent.com/Anil-matcha/Awesome-GPT-Image-2-API-Prompts/main/README.md",
+      "output": "gpt-image-anil.md",
+      "parser": "gpt-image"
     }
   ]
 }

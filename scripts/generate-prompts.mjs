@@ -173,10 +173,12 @@ function parseJimmy(content) {
   return examples;
 }
 
-// 解析 gpt-image.md（ZeroLu/awesome-gpt-image，GPT Image 2）
-function parseGptImageAwesome(content) {
+// 解析 gpt-image.md（ZeroLu/awesome-gpt-image、Anil-matcha 等，GPT Image 2）
+function parseGptImageAwesome(content, options = {}) {
   const examples = [];
-  const RAW_BASE = "https://raw.githubusercontent.com/ZeroLu/awesome-gpt-image/main/";
+  const RAW_BASE =
+    options.rawBase ?? "https://raw.githubusercontent.com/ZeroLu/awesome-gpt-image/main/";
+  const sourceKey = options.source ?? "gpt-image-awesome";
   const sections = content.split(/(?=^## [^#])/m).filter((s) => s.trim());
 
   for (const section of sections) {
@@ -186,8 +188,11 @@ function parseGptImageAwesome(content) {
     const sectionLower = sectionTitle.toLowerCase();
     if (
       sectionLower.includes("table of contents") ||
-      sectionLower.startsWith("why gpt image") ||
-      sectionLower.includes("contributing")
+      sectionLower.startsWith("why gpt") ||
+      sectionLower.includes("contributing") ||
+      sectionLower === "introduction" ||
+      sectionLower === "news" ||
+      sectionLower === "menu"
     ) {
       continue;
     }
@@ -250,14 +255,14 @@ function parseGptImageAwesome(content) {
         }
       }
 
-      const tags = ["gpt-image-2", "gpt-image-awesome", categoryTag];
+      const tags = ["gpt-image-2", sourceKey, categoryTag];
 
       examples.push({
         id: null,
         title,
         author,
         link,
-        source: "gpt-image-awesome",
+        source: sourceKey,
         model: "gpt-image-2",
         tags,
         prompt,
@@ -328,6 +333,20 @@ function parseNewMd(content) {
   return examples;
 }
 
+/** YouMind awesome-gpt-image-2：结构与 new.md（parseNewMd）一致，归类为 GPT Image 2 */
+function parseYouMindGptImage2(content) {
+  return parseNewMd(content).map((item) => ({
+    ...item,
+    model: "gpt-image-2",
+    source: "youmind-gpt-image-2",
+    tags: [
+      "gpt-image-2",
+      "youmind-gpt-image-2",
+      ...item.tags.filter((t) => t !== "nano-banana" && t !== "awesome"),
+    ],
+  }));
+}
+
 /** 英文：标题/提示词/标签中出现则提高排序（小写匹配） */
 const FEMALE_TERMS_EN = [
   "women",
@@ -378,6 +397,26 @@ function sortPriorityScore(item) {
   return s;
 }
 
+/**
+ * 在保持各模型内部排序不变的前提下，将 nano-banana 与 gpt-image-2 交替拼接，
+ * 避免「全部」列表首屏被单一模型占满；单模型筛选后相对顺序不变。
+ */
+function interleaveNanoAndGpt(items) {
+  const nano = [];
+  const gpt = [];
+  for (const item of items) {
+    if (item.model === "gpt-image-2") gpt.push(item);
+    else nano.push(item);
+  }
+  const out = [];
+  const n = Math.max(nano.length, gpt.length);
+  for (let k = 0; k < n; k++) {
+    if (k < nano.length) out.push(nano[k]);
+    if (k < gpt.length) out.push(gpt[k]);
+  }
+  return out;
+}
+
 // 主流程
 const SOURCE_ORDER = [
   { file: "data.md", parser: parseDataMd },
@@ -385,11 +424,20 @@ const SOURCE_ORDER = [
   { file: "new.md", parser: parseNewMd },
   { file: "antigravity.md", parser: parseNanoPro },
   { file: "jimmy.md", parser: parseJimmy },
-  { file: "gpt-image.md", parser: parseGptImageAwesome },
+  { file: "gpt-image.md", parser: (c) => parseGptImageAwesome(c) },
+  {
+    file: "gpt-image-anil.md",
+    parser: (c) =>
+      parseGptImageAwesome(c, {
+        rawBase: "https://raw.githubusercontent.com/Anil-matcha/Awesome-GPT-Image-2-API-Prompts/main/",
+        source: "anil-gpt-image-2",
+      }),
+  },
+  { file: "gpt-image-youmind.md", parser: parseYouMindGptImage2 },
 ];
 
 function main() {
-  const all = [];
+  let all = [];
   let idCounter = 1;
   /** 全量拼接顺序，供同一 mtime 的文件内稳定排序 */
   let sortOrder = 0;
@@ -410,6 +458,10 @@ function main() {
         tags: ["antigravity", "nano-banana"],
       }));
     }
+
+    items = items.filter(
+      (item) => typeof item.imageUrl === "string" && item.imageUrl.trim().length > 0
+    );
 
     const seen = new Set(all.map((x) => x.id));
     for (let i = 0; i < items.length; i++) {
@@ -443,6 +495,8 @@ function main() {
     if (b._sortMtime !== a._sortMtime) return b._sortMtime - a._sortMtime;
     return a._sortOrder - b._sortOrder;
   });
+
+  all = interleaveNanoAndGpt(all);
 
   const prompts = all.map(({ _sortMtime, _sortOrder, ...rest }) => rest);
 
