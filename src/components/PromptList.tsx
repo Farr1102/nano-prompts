@@ -5,12 +5,11 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getAllTags, getPromptModel, type PromptItem, type PromptModelId } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
-import PromptCard from "./PromptCard";
 import SearchBar from "./SearchBar";
 import DetailModal from "./DetailModal";
+import PromptMasonryGrid from "./PromptMasonryGrid";
 
 const TAG_VISIBLE = 32;
-const ITEMS_PER_SECTION = 16;
 
 type ModelParam = "all" | "nano-banana" | "gpt-image-2";
 
@@ -26,11 +25,9 @@ function getListPath(locale: Locale, model: ModelParam): string {
 
 export default function PromptList({
   prompts,
-  sourceLabels,
   locale,
 }: {
   prompts: PromptItem[];
-  sourceLabels: Record<string, string>;
   locale: Locale;
 }) {
   const router = useRouter();
@@ -62,7 +59,6 @@ export default function PromptList({
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(tagsFromUrl));
   const [selected, setSelected] = useState<PromptItem | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const pendingPRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -178,29 +174,8 @@ export default function PromptList({
     return list;
   }, [corpus, keyword, selectedTags]);
 
-  const bySource = useMemo(() => {
-    const map = new Map<string, PromptItem[]>();
-    for (const p of filtered) {
-      const arr = map.get(p.source) || [];
-      arr.push(p);
-      map.set(p.source, arr);
-    }
-    return map;
-  }, [filtered]);
-
   const visibleTags = tagsExpanded ? allTags : allTags.slice(0, TAG_VISIBLE);
   const hasMoreTags = allTags.length > TAG_VISIBLE;
-
-  const sourceOrder = [
-    "gpt-image-awesome",
-    "awesome",
-    "zizheruan",
-    "antigravity",
-    "jimmy",
-    "nano-pro",
-    "pro",
-    "banana",
-  ];
 
   const setModelFilter = (next: ModelParam) => {
     setSelectedTags(new Set());
@@ -226,119 +201,95 @@ export default function PromptList({
   ];
 
   return (
-    <div className="space-y-8">
-      <div
-        className="flex flex-wrap gap-2"
-        role="tablist"
-        aria-label={t(locale, "modelFilterAria")}
-      >
-        {modelTabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={effectiveModel === tab.id}
-            onClick={() => setModelFilter(tab.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-              effectiveModel === tab.id
-                ? "bg-amber-500/25 text-amber-300 border-amber-500/50"
-                : "bg-stone-900/80 text-stone-400 border-stone-700 hover:border-stone-600"
-            }`}
-          >
-            {t(locale, tab.labelKey)}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start lg:gap-10 xl:gap-12">
+      <aside className="w-full shrink-0 space-y-4 lg:sticky lg:top-16 lg:z-10 lg:self-start lg:w-80 lg:max-w-[20rem] xl:w-[22rem] xl:max-w-[22rem]">
+        <div className="rounded-2xl border border-black/[0.06] bg-apple-surface p-4 shadow-apple">
+          <SearchBar onSearch={handleSearch} locale={locale} initialValue={keyword} />
+        </div>
 
-      <div className="sticky top-[73px] z-10 -mx-4 px-4 py-3 bg-stone-950/95 backdrop-blur-sm border-b border-stone-800 space-y-3">
-        <SearchBar onSearch={handleSearch} locale={locale} initialValue={keyword} />
+        <div className="rounded-2xl border border-black/[0.06] bg-apple-surface p-4 shadow-apple">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-apple-tertiary">
+            {t(locale, "sidebarTagsHeading")}
+          </p>
+          <div className="flex max-h-[min(50vh,28rem)] flex-wrap gap-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-black/15">
+            {visibleTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                aria-pressed={selectedTags.has(tag)}
+                title={t(locale, "filterByTag", { tag })}
+                onClick={() => toggleTag(tag)}
+                className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/35 ${
+                  selectedTags.has(tag)
+                    ? "bg-apple-blue text-white shadow-sm"
+                    : "border border-black/[0.08] bg-apple-canvas/80 text-apple-secondary hover:border-black/[0.12]"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            {hasMoreTags && (
+              <button
+                type="button"
+                onClick={() => setTagsExpanded(!tagsExpanded)}
+                className="rounded-full border border-black/[0.08] bg-apple-canvas/80 px-2.5 py-1 text-xs font-medium text-apple-blue hover:bg-black/[0.04]"
+              >
+                {tagsExpanded ? t(locale, "collapseTags") : `+${allTags.length - TAG_VISIBLE} ${t(locale, "moreTags")}`}
+              </button>
+            )}
+          </div>
+        </div>
 
-        <div className="flex flex-wrap gap-2">
-          {visibleTags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              aria-pressed={selectedTags.has(tag)}
-              title={t(locale, "filterByTag", { tag })}
-              onClick={() => toggleTag(tag)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                selectedTags.has(tag)
-                  ? "bg-amber-500/30 text-amber-400 border border-amber-500/50"
-                  : "bg-stone-800/80 text-stone-400 hover:bg-stone-700 border border-stone-700"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-          {hasMoreTags && (
+        <p className="px-1 text-sm text-apple-secondary">
+          {t(locale, "filterResult", { count: String(filtered.length) })}
+          {selectedTags.size > 0 && (
             <button
               type="button"
-              onClick={() => setTagsExpanded(!tagsExpanded)}
-              className="px-2.5 py-1 rounded-md text-xs font-medium text-amber-400 hover:bg-amber-500/20 border border-stone-700"
+              onClick={clearTags}
+              className="ml-2 font-medium text-apple-blue hover:underline"
             >
-              {tagsExpanded ? t(locale, "collapseTags") : `+${allTags.length - TAG_VISIBLE} ${t(locale, "moreTags")}`}
+              {t(locale, "clearTags")}
             </button>
           )}
-        </div>
-      </div>
+        </p>
+      </aside>
 
-      <p className="text-sm text-stone-500">
-        {t(locale, "filterResult", { count: String(filtered.length) })}
-        {selectedTags.size > 0 && (
-          <button
-            type="button"
-            onClick={clearTags}
-            className="ml-2 text-amber-400 hover:underline"
+      <div className="min-w-0 flex-1 space-y-6">
+        <div
+          className="sticky top-16 z-10 mb-4 rounded-2xl border border-black/[0.06] bg-apple-surface/95 px-3 py-2.5 shadow-apple backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-apple-surface/88"
+        >
+          <div
+            className="flex flex-wrap gap-1.5 rounded-xl bg-black/[0.035] p-1.5"
+            role="tablist"
+            aria-label={t(locale, "modelFilterAria")}
           >
-            {t(locale, "clearTags")}
-          </button>
-        )}
-      </p>
-
-      {filtered.length === 0 ? (
-        <div className="py-16 text-center text-stone-500">
-          {t(locale, "noResults")}
+            {modelTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={effectiveModel === tab.id}
+                onClick={() => setModelFilter(tab.id)}
+                className={`rounded-full px-4 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/40 focus-visible:ring-offset-2 focus-visible:ring-offset-apple-canvas ${
+                  effectiveModel === tab.id
+                    ? "bg-apple-surface font-semibold text-apple-label shadow-sm ring-1 ring-black/[0.07]"
+                    : "font-medium text-apple-secondary hover:bg-white/70 hover:text-apple-label active:scale-[0.98]"
+                }`}
+              >
+                {t(locale, tab.labelKey)}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        sourceOrder.map((source) => {
-          const items = bySource.get(source) || [];
-          if (items.length === 0) return null;
 
-          const isExpanded = expandedSections.has(source);
-          const displayItems = items.length > ITEMS_PER_SECTION && !isExpanded
-            ? items.slice(0, ITEMS_PER_SECTION)
-            : items;
-          const hasMore = items.length > ITEMS_PER_SECTION && !isExpanded;
-
-          return (
-            <section key={source}>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span className="text-amber-400">◆</span>{" "}
-                {sourceLabels[source] || source} ({items.length})
-              </h2>
-              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-                {displayItems.map((example) => (
-                  <PromptCard
-                    key={example.id}
-                    example={example}
-                    onClick={() => openPrompt(example)}
-                    locale={locale}
-                  />
-                ))}
-              </div>
-              {hasMore && (
-                <button
-                  type="button"
-                  onClick={() => setExpandedSections((prev) => new Set(prev).add(source))}
-                  className="mt-4 px-4 py-2 rounded-lg text-sm text-amber-400 hover:bg-amber-500/20 border border-stone-700"
-                >
-                  {t(locale, "showMore")} ({items.length - ITEMS_PER_SECTION})
-                </button>
-              )}
-            </section>
-          );
-        })
-      )}
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-apple-secondary">
+            {t(locale, "noResults")}
+          </div>
+        ) : (
+          <PromptMasonryGrid items={filtered} locale={locale} onOpen={openPrompt} />
+        )}
+      </div>
 
       <DetailModal example={selected} onClose={() => openPrompt(null)} locale={locale} />
     </div>

@@ -6,6 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteBaseUrl()),
+  themeColor: "#f5f5f7",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
@@ -23,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="antialiased bg-stone-950 text-stone-100 min-h-screen">
+      <body className="site-atmosphere min-h-screen font-sans">
         <DocumentLang />
         {children}
         <Analytics />

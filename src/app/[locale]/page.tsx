@@ -3,7 +3,7 @@ import { getPromptsData } from "@/lib/get-prompts-data";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getSiteBaseUrl } from "@/lib/site";
 import { buildHomeJsonLd } from "@/lib/seo";
-import { sourceLabels, t, type Locale } from "@/lib/i18n";
+import { t, type Locale } from "@/lib/i18n";
 import PromptList from "@/components/PromptList";
 import LangSwitcher from "@/components/LangSwitcher";
 
@@ -17,27 +17,25 @@ export default async function Home({
   const data = getPromptsData();
   const { prompts, total } = data;
   const baseUrl = getSiteBaseUrl();
-  const pageUrl = `${baseUrl}/${loc}`;
 
   if (!prompts?.length) {
     return (
       <main className="min-h-screen">
-        <header className="border-b border-stone-800 bg-stone-900/50 sticky top-0 z-10 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold tracking-tight">🖼️ {t(loc, "title")}</h1>
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center border-b border-black/[0.06] bg-white/80 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/72">
+          <div className="mx-auto flex h-full w-full max-w-page items-center px-5 sm:px-8">
+            <div className="flex w-full min-w-0 items-center justify-between gap-4">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-apple-label sm:text-xl">{t(loc, "title")}</h1>
               <LangSwitcher locale={loc} />
             </div>
           </div>
         </header>
-        <div className="max-w-5xl mx-auto px-4 py-16 text-center text-stone-500">
+        <div className="mx-auto max-w-page px-5 py-16 text-center text-apple-secondary sm:px-8">
           {t(loc, "errorLoading")}
         </div>
       </main>
     );
   }
 
-  const labels = sourceLabels[loc];
   const collectionJsonLd = buildHomeJsonLd({ baseUrl, locale: loc, total });
 
   return (
@@ -46,25 +44,27 @@ export default async function Home({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLdForScript(collectionJsonLd) }}
       />
-      <header className="border-b border-stone-800 bg-stone-900/50 sticky top-0 z-10 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                🖼️ {t(loc, "title")}
-              </h1>
-              <p className="text-stone-400 mt-1 text-sm">
-                {t(loc, "subtitle", { total: String(total) })}
-              </p>
-            </div>
+      <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center border-b border-black/[0.06] bg-white/80 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/72">
+        <div className="mx-auto flex h-full w-full max-w-page items-center px-5 sm:px-8">
+          <div className="flex w-full min-w-0 items-center justify-between gap-4">
+            <h1
+              className="truncate text-lg font-semibold tracking-tight text-apple-label sm:text-xl md:text-2xl"
+              title={t(loc, "title")}
+            >
+              {t(loc, "title")}
+            </h1>
             <LangSwitcher locale={loc} />
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <Suspense fallback={<div className="py-8 text-stone-500 text-center">{t(loc, "searchPlaceholder")}</div>}>
-          <PromptList prompts={prompts} sourceLabels={labels} locale={loc} />
+      <div className="mx-auto max-w-page px-5 py-8 sm:px-8">
+        <Suspense
+          fallback={
+            <div className="py-12 text-center text-sm text-apple-tertiary">{t(loc, "searchPlaceholder")}</div>
+          }
+        >
+          <PromptList prompts={prompts} locale={loc} />
         </Suspense>
       </div>
     </main>

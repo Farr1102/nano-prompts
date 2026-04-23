@@ -22,13 +22,6 @@
       "parser": "awesome"
     },
     {
-      "id": "zizheruan",
-      "name": "ZizheRuan awesome-nano-banana-pro-prompts-and-examples",
-      "url": "https://raw.githubusercontent.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples/main/README.md",
-      "output": "zizheruan.md",
-      "parser": "zizheruan"
-    },
-    {
       "id": "antigravity",
       "name": "devanshug2307 Awesome-Nano-Banana-Prompts",
       "url": "https://raw.githubusercontent.com/devanshug2307/Awesome-Nano-Banana-Prompts/main/README.md",

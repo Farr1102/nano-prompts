@@ -131,46 +131,6 @@ function parseNanoPro(content) {
   return examples;
 }
 
-// 解析 zizheruan.md (Case N: 格式)
-function parseZizheruan(content) {
-  const examples = [];
-  const parts = content.split(/(?=### Case \d+:)/).filter(Boolean);
-
-  for (const part of parts) {
-    const headerMatch = part.match(/^### Case (\d+):\s*\[([^\]]+)\]\((https?:\/\/[^)]+)\)[（(]by\s+\[@?([^\]]+)\]\((https?:\/\/[^)]+)\)[）)]/);
-    if (!headerMatch) continue;
-
-    const num = headerMatch[1];
-    const title = headerMatch[2].trim();
-    const link = headerMatch[3];
-    const author = headerMatch[4].replace(/^@/, "");
-
-    const promptMatch = part.match(/\*\*prompt:\*\*\s*```\s*\n([\s\S]*?)```/);
-    const prompt = promptMatch ? promptMatch[1].trim() : "";
-    if (!prompt) continue;
-
-    const imgMatch = part.match(/<img[^>]+src="(https?:\/\/[^"]+)"[^>]*>/);
-    let imageUrl = imgMatch ? imgMatch[1] : undefined;
-    if (!imageUrl) {
-      const relImg = part.match(/<img[^>]+src="(images\/[^"]+)"[^>]*>/);
-      if (relImg) imageUrl = "https://raw.githubusercontent.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples/main/" + relImg[1];
-    }
-
-    examples.push({
-      id: `zizheruan-${num}`,
-      title,
-      author,
-      link,
-      source: "zizheruan",
-      model: "nano-banana",
-      tags: ["zizheruan", "nano-banana"],
-      prompt,
-      imageUrl,
-    });
-  }
-  return examples;
-}
-
 // 解析 jimmy.md (Case N: Title (by @author) 格式)
 function parseJimmy(content) {
   const examples = [];
@@ -368,12 +328,61 @@ function parseNewMd(content) {
   return examples;
 }
 
+/** 英文：标题/提示词/标签中出现则提高排序（小写匹配） */
+const FEMALE_TERMS_EN = [
+  "women",
+  "woman",
+  "girl",
+  "girls",
+  "female",
+  "ladies",
+  "lady",
+  "mother",
+  "mom",
+  "mum",
+  "daughter",
+  "sister",
+  "bride",
+  "actress",
+  "queen",
+  "princess",
+  "goddess",
+  "wife",
+  "girlfriend",
+  "schoolgirl",
+  "businesswoman",
+  "chairwoman",
+];
+
+/** 中文：原样包含即命中 */
+const FEMALE_TERMS_ZH = ["女", "女孩", "女人", "女性", "少女", "美女", "妇人", "女士", "母女", "少女"];
+
+function hasFemaleKeyword(item) {
+  const tags = (item.tags || []).join(" ");
+  const hay = `${item.title}\n${item.prompt}\n${tags}`;
+  const hayLower = hay.toLowerCase();
+  for (const w of FEMALE_TERMS_EN) {
+    if (hayLower.includes(w)) return true;
+  }
+  for (const w of FEMALE_TERMS_ZH) {
+    if (hay.includes(w)) return true;
+  }
+  return false;
+}
+
+/** 排序权重：女性相关 > GPT Image 2 > 其余；同档内仍按文件时间新→旧 */
+function sortPriorityScore(item) {
+  let s = 0;
+  if (hasFemaleKeyword(item)) s += 1000;
+  if (item.model === "gpt-image-2") s += 500;
+  return s;
+}
+
 // 主流程
 const SOURCE_ORDER = [
   { file: "data.md", parser: parseDataMd },
   { file: "nano-pro.md", parser: parseNanoPro },
   { file: "new.md", parser: parseNewMd },
-  { file: "zizheruan.md", parser: parseZizheruan },
   { file: "antigravity.md", parser: parseNanoPro },
   { file: "jimmy.md", parser: parseJimmy },
   { file: "gpt-image.md", parser: parseGptImageAwesome },
@@ -382,11 +391,14 @@ const SOURCE_ORDER = [
 function main() {
   const all = [];
   let idCounter = 1;
+  /** 全量拼接顺序，供同一 mtime 的文件内稳定排序 */
+  let sortOrder = 0;
 
   for (const { file, parser } of SOURCE_ORDER) {
     const filePath = path.join(ROOT, file);
     if (!fs.existsSync(filePath)) continue;
 
+    const mtimeMs = fs.statSync(filePath).mtimeMs;
     const content = fs.readFileSync(filePath, "utf-8");
     let items = parser(content);
 
@@ -414,15 +426,31 @@ function main() {
           : model === "gpt-image-2" && !tags.includes("gpt-image-2")
             ? [...tags, "gpt-image-2"]
             : tags;
-      all.push({ ...item, model, tags: withModelTag });
+      all.push({
+        ...item,
+        model,
+        tags: withModelTag,
+        _sortMtime: mtimeMs,
+        _sortOrder: sortOrder++,
+      });
     }
   }
+
+  // 优先：含女性相关词、GPT Image 2；再按源文件修改时间新→旧；同一时间戳内保持解析顺序
+  all.sort((a, b) => {
+    const p = sortPriorityScore(b) - sortPriorityScore(a);
+    if (p !== 0) return p;
+    if (b._sortMtime !== a._sortMtime) return b._sortMtime - a._sortMtime;
+    return a._sortOrder - b._sortOrder;
+  });
+
+  const prompts = all.map(({ _sortMtime, _sortOrder, ...rest }) => rest);
 
   const output = {
     version: 1,
     updatedAt: new Date().toISOString(),
-    total: all.length,
-    prompts: all,
+    total: prompts.length,
+    prompts,
   };
 
   const outDir = path.join(ROOT, "public");
@@ -434,7 +462,7 @@ function main() {
     "utf-8"
   );
 
-  console.log(`Generated prompts.json with ${all.length} prompts`);
+  console.log(`Generated prompts.json with ${prompts.length} prompts`);
 }
 
 main();

@@ -10,7 +10,6 @@ export interface PromptItem {
     | "banana"
     | "nano-pro"
     | "awesome"
-    | "zizheruan"
     | "antigravity"
     | "jimmy"
     | "gpt-image-awesome";

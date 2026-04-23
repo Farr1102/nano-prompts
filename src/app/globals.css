@@ -1,3 +1,61 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* react-masonry-css：父级 flex，列间距用 padding-left + 负 margin 抵消 */
+.prompt-masonry-grid {
+  display: flex;
+  margin-left: -1rem;
+  width: auto;
+}
+
+.prompt-masonry-grid_column {
+  padding-left: 1rem;
+  background-clip: padding-box;
+}
+
+/* 页面氛围：柔和极光 + 细网格 + 纸质噪点（思路参考同级 image2webp 的 site-surface） */
+body.site-atmosphere {
+  position: relative;
+  isolation: isolate;
+  background-color: #f5f5f7;
+}
+
+body.site-atmosphere::before,
+body.site-atmosphere::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body.site-atmosphere::before {
+  background:
+    radial-gradient(1200px 800px at 18% -8%, color-mix(in oklab, #0071e3 20%, transparent), transparent 58%),
+    radial-gradient(900px 720px at 82% 10%, color-mix(in oklab, #ff9f0a 15%, transparent), transparent 60%),
+    radial-gradient(720px 620px at 70% 94%, color-mix(in oklab, #5ac8fa 12%, transparent), transparent 62%),
+    linear-gradient(to bottom, color-mix(in oklab, #f5f5f7 90%, #ffffff), #f5f5f7);
+  filter: saturate(1.06);
+}
+
+body.site-atmosphere::after {
+  opacity: 0.52;
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.024) 1px, transparent 1px),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.012) 0 1px, transparent 1px 3px);
+  background-size: 72px 72px, 72px 72px, 4px 4px;
+  mix-blend-mode: multiply;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply text-apple-label antialiased;
+  }
+}

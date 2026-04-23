@@ -9,7 +9,6 @@
 | data.md | Nano Banana | [PicoTrex/Awesome-Nano-Banana-images](https://github.com/PicoTrex/Awesome-Nano-Banana-images) |
 | nano-pro.md | Nano Banana | [ZeroLu/awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro) |
 | new.md | Nano Banana | [YouMind-OpenLab/awesome-nano-banana-pro-prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts) |
-| zizheruan.md | Nano Banana | [ZizheRuan/awesome-nano-banana-pro-prompts-and-examples](https://github.com/ZizheRuan/awesome-nano-banana-pro-prompts-and-examples) |
 | antigravity.md | Nano Banana | [devanshug2307/Awesome-Nano-Banana-Prompts](https://github.com/devanshug2307/Awesome-Nano-Banana-Prompts) |
 | jimmy.md | Nano Banana | [JimmyLv/awesome-nano-banana](https://github.com/JimmyLv/awesome-nano-banana) |
 | gpt-image.md | GPT Image 2 | [ZeroLu/awesome-gpt-image](https://github.com/ZeroLu/awesome-gpt-image) |

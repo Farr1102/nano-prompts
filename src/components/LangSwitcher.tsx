@@ -10,7 +10,7 @@ export default function LangSwitcher({ locale }: { locale: Locale }) {
   return (
     <Link
       href={target}
-      className="px-3 py-1.5 rounded-lg text-sm font-medium text-stone-400 hover:text-amber-400 hover:bg-stone-800 transition-colors"
+      className="rounded-full px-4 py-1.5 text-sm font-medium text-apple-label bg-black/[0.04] hover:bg-black/[0.07] active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue/40 focus-visible:ring-offset-2"
     >
       {label}
     </Link>
