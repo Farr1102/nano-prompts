@@ -1,19 +1,30 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import DocumentLang from "@/components/DocumentLang";
+import { getSiteBaseUrl } from "@/lib/site";
 import "./globals.css";
 
-export default async function RootLayout({
+export const metadata: Metadata = {
+  metadataBase: new URL(getSiteBaseUrl()),
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+};
+
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const locale = headersList.get("x-locale") || "zh";
-  const lang = locale === "en" ? "en" : "zh-CN";
-
   return (
-    <html lang={lang}>
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className="antialiased bg-stone-950 text-stone-100 min-h-screen">
+        <DocumentLang />
         {children}
         <Analytics />
       </body>

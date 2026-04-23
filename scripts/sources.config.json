@@ -41,6 +41,13 @@
       "url": "https://raw.githubusercontent.com/JimmyLv/awesome-nano-banana/main/README.md",
       "output": "jimmy.md",
       "parser": "jimmy"
+    },
+    {
+      "id": "gpt-image",
+      "name": "ZeroLu awesome-gpt-image (GPT Image 2)",
+      "url": "https://raw.githubusercontent.com/ZeroLu/awesome-gpt-image/main/README.md",
+      "output": "gpt-image.md",
+      "parser": "gpt-image"
     }
   ]
 }

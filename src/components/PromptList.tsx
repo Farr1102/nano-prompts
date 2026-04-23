@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import type { PromptItem } from "@/lib/prompts";
+import { getAllTags, getPromptModel, type PromptItem, type PromptModelId } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import PromptCard from "./PromptCard";
@@ -12,14 +12,24 @@ import DetailModal from "./DetailModal";
 const TAG_VISIBLE = 32;
 const ITEMS_PER_SECTION = 16;
 
+type ModelParam = "all" | "nano-banana" | "gpt-image-2";
+
+function normalizeModelParam(raw: string | null): ModelParam {
+  if (raw === "nano-banana" || raw === "gpt-image-2") return raw;
+  return "all";
+}
+
+function getListPath(locale: Locale, model: ModelParam): string {
+  if (model === "all") return `/${locale}`;
+  return `/${locale}/m/${model}`;
+}
+
 export default function PromptList({
   prompts,
-  allTags,
   sourceLabels,
   locale,
 }: {
   prompts: PromptItem[];
-  allTags: string[];
   sourceLabels: Record<string, string>;
   locale: Locale;
 }) {
@@ -30,6 +40,23 @@ export default function PromptList({
   const qFromUrl = searchParams.get("q") ?? "";
   const tagsFromUrl = searchParams.get("tags")?.split(",").filter(Boolean) ?? [];
   const pFromUrl = searchParams.get("p") ?? "";
+
+  const hubModel = useMemo((): PromptModelId | null => {
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts.length >= 3 && parts[1] === "m") {
+      const m = parts[2];
+      if (m === "nano-banana" || m === "gpt-image-2") return m;
+    }
+    return null;
+  }, [pathname]);
+
+  const queryModel = normalizeModelParam(searchParams.get("model"));
+  const effectiveModel: ModelParam = hubModel ?? queryModel;
+
+  const listPath = useMemo(
+    () => getListPath(locale, effectiveModel),
+    [locale, effectiveModel]
+  );
 
   const [keyword, setKeyword] = useState(qFromUrl);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set(tagsFromUrl));
@@ -42,6 +69,28 @@ export default function PromptList({
     setKeyword(qFromUrl);
     setSelectedTags(new Set(tagsFromUrl));
   }, [qFromUrl, tagsFromUrl.join(",")]);
+
+  /** 替代原 middleware：/?model= 规范到 /m/{model}（仅语言根路径） */
+  useEffect(() => {
+    const model = searchParams.get("model");
+    if (model !== "nano-banana" && model !== "gpt-image-2") return;
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts.length !== 1) return;
+    const loc = parts[0];
+    if (loc !== "zh" && loc !== "en") return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("model");
+    const s = params.toString();
+    const dest = s ? `/${loc}/m/${model}?${s}` : `/${loc}/m/${model}`;
+    router.replace(dest);
+  }, [pathname, router, searchParams]);
+
+  const corpus = useMemo(() => {
+    if (effectiveModel === "all") return prompts;
+    return prompts.filter((p) => getPromptModel(p) === (effectiveModel as PromptModelId));
+  }, [prompts, effectiveModel]);
+
+  const allTags = useMemo(() => getAllTags(corpus), [corpus]);
 
   useEffect(() => {
     // Ignore stale URL updates while a newer open/close action is pending.
@@ -56,8 +105,6 @@ export default function PromptList({
 
   const updateUrl = useCallback(
     (updates: { q?: string; tags?: string[]; p?: string }) => {
-      // Always build from real-time location to avoid race conditions
-      // when multiple router.replace calls happen quickly.
       const params = new URLSearchParams(
         typeof window !== "undefined" ? window.location.search : searchParams.toString()
       );
@@ -73,10 +120,11 @@ export default function PromptList({
         if (updates.p) params.set("p", updates.p);
         else params.delete("p");
       }
+      params.delete("model");
       const s = params.toString();
-      router.replace(s ? `${pathname}?${s}` : pathname, { scroll: false });
+      router.replace(s ? `${listPath}?${s}` : listPath, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [listPath, router, searchParams]
   );
 
   const handleSearch = useCallback(
@@ -108,7 +156,7 @@ export default function PromptList({
   };
 
   const filtered = useMemo(() => {
-    let list = prompts;
+    let list = corpus;
 
     if (keyword.trim()) {
       const k = keyword.toLowerCase();
@@ -128,7 +176,7 @@ export default function PromptList({
     }
 
     return list;
-  }, [prompts, keyword, selectedTags]);
+  }, [corpus, keyword, selectedTags]);
 
   const bySource = useMemo(() => {
     const map = new Map<string, PromptItem[]>();
@@ -143,10 +191,65 @@ export default function PromptList({
   const visibleTags = tagsExpanded ? allTags : allTags.slice(0, TAG_VISIBLE);
   const hasMoreTags = allTags.length > TAG_VISIBLE;
 
-  const sourceOrder = ["awesome", "zizheruan", "antigravity", "jimmy", "nano-pro", "pro", "banana"];
+  const sourceOrder = [
+    "gpt-image-awesome",
+    "awesome",
+    "zizheruan",
+    "antigravity",
+    "jimmy",
+    "nano-pro",
+    "pro",
+    "banana",
+  ];
+
+  const setModelFilter = (next: ModelParam) => {
+    setSelectedTags(new Set());
+    const params = new URLSearchParams(
+      typeof window !== "undefined" ? window.location.search : searchParams.toString()
+    );
+    params.delete("tags");
+    params.delete("model");
+    const q = params.get("q") ?? "";
+    const p = params.get("p") ?? "";
+    const nextParams = new URLSearchParams();
+    if (q) nextParams.set("q", q);
+    if (p) nextParams.set("p", p);
+    const s = nextParams.toString();
+    const path = getListPath(locale, next);
+    router.replace(s ? `${path}?${s}` : path, { scroll: false });
+  };
+
+  const modelTabs = [
+    { id: "all" as const, labelKey: "modelAll" as const },
+    { id: "nano-banana" as const, labelKey: "modelNanoBanana" as const },
+    { id: "gpt-image-2" as const, labelKey: "modelGptImage2" as const },
+  ];
 
   return (
     <div className="space-y-8">
+      <div
+        className="flex flex-wrap gap-2"
+        role="tablist"
+        aria-label={t(locale, "modelFilterAria")}
+      >
+        {modelTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={effectiveModel === tab.id}
+            onClick={() => setModelFilter(tab.id)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+              effectiveModel === tab.id
+                ? "bg-amber-500/25 text-amber-300 border-amber-500/50"
+                : "bg-stone-900/80 text-stone-400 border-stone-700 hover:border-stone-600"
+            }`}
+          >
+            {t(locale, tab.labelKey)}
+          </button>
+        ))}
+      </div>
+
       <div className="sticky top-[73px] z-10 -mx-4 px-4 py-3 bg-stone-950/95 backdrop-blur-sm border-b border-stone-800 space-y-3">
         <SearchBar onSearch={handleSearch} locale={locale} initialValue={keyword} />
 
@@ -237,12 +340,7 @@ export default function PromptList({
         })
       )}
 
-      <DetailModal
-        example={selected}
-        onClose={() => openPrompt(null)}
-        locale={locale}
-        localePath={pathname.split("/")[1]}
-      />
+      <DetailModal example={selected} onClose={() => openPrompt(null)} locale={locale} />
     </div>
   );
 }

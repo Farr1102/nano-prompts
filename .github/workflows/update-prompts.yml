@@ -27,13 +27,13 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          git diff --quiet public/prompts.json data.md nano-pro.md new.md || echo "changed=true" >> $GITHUB_OUTPUT
+          git diff --quiet public/prompts.json data.md nano-pro.md new.md zizheruan.md antigravity.md jimmy.md gpt-image.md || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push
         if: steps.changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.md nano-pro.md new.md public/prompts.json
+          git add data.md nano-pro.md new.md zizheruan.md antigravity.md jimmy.md gpt-image.md public/prompts.json
           git commit -m "chore: auto-update prompts from GitHub sources"
           git push

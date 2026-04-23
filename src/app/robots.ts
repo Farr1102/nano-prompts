@@ -1,7 +1,10 @@
 import { MetadataRoute } from "next";
+import { getSiteBaseUrl } from "@/lib/site";
+
+export const dynamic = "force-static";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nano-banana-prompts.vercel.app";
+  const baseUrl = getSiteBaseUrl();
 
   return {
     rules: {

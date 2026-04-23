@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: process.cwd(),
+  output: "export",
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "raw.githubusercontent.com", pathname: "/**" },
       { protocol: "https", hostname: "pbs.twimg.com", pathname: "/**" },

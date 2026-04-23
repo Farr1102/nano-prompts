@@ -12,12 +12,10 @@ export default function DetailModal({
   example,
   onClose,
   locale,
-  localePath,
 }: {
   example: PromptItem | null;
   onClose: () => void;
   locale: Locale;
-  localePath?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -95,9 +93,9 @@ export default function DetailModal({
             {example.title}
           </h2>
           <div className="flex items-center gap-2 shrink-0">
-            {localePath && example && (
+            {example && (
               <Link
-                href={`/${localePath}/p/${example.id}`}
+                href={`/${locale}/p/${example.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-lg text-sm font-medium text-stone-400 hover:text-amber-400 hover:bg-stone-800 border border-stone-700"

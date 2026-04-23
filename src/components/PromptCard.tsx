@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { PromptItem } from "@/lib/prompts";
+import { getPromptModel, type PromptItem } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import { remoteImageIsOptimizable } from "@/lib/remote-image";
@@ -19,13 +19,19 @@ export default function PromptCard({
   const [imgFailed, setImgFailed] = useState(false);
   const useNext = Boolean(example.imageUrl && remoteImageIsOptimizable(example.imageUrl));
 
+  const model = getPromptModel(example);
+  const modelBadge =
+    model === "gpt-image-2"
+      ? { label: t(locale, "modelCornerBadgeGpt"), className: "bg-sky-500/90 text-white border-sky-400/50" }
+      : { label: t(locale, "modelCornerBadgeNano"), className: "bg-amber-500/90 text-stone-950 border-amber-400/50" };
+
   const ariaSuffix = example.author
     ? t(locale, "openPromptAriaAuthorSuffix", { author: example.author })
     : "";
-  const ariaLabel = t(locale, "openPromptAria", {
+  const ariaLabel = `${t(locale, "openPromptAria", {
     title: example.title,
     suffix: ariaSuffix,
-  });
+  })} · ${modelBadge.label}`;
 
   const showImage = Boolean(example.imageUrl) && !imgFailed;
   const placeholder = (
@@ -43,6 +49,12 @@ export default function PromptCard({
     >
       <span aria-hidden="true" className="block w-full">
         <div className="aspect-[4/3] bg-stone-950 relative overflow-hidden">
+          <span
+            aria-hidden
+            className={`absolute top-2 right-2 z-10 max-w-[calc(100%-1rem)] truncate rounded-md border px-1.5 py-0.5 text-[10px] font-semibold leading-tight shadow-sm backdrop-blur-[2px] ${modelBadge.className}`}
+          >
+            {modelBadge.label}
+          </span>
           {showImage && useNext ? (
             <Image
               src={example.imageUrl!}

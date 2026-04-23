@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { getPromptsData, getAllTags } from "@/lib/prompts";
+import { getPromptsData } from "@/lib/get-prompts-data";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getSiteBaseUrl } from "@/lib/site";
+import { buildHomeJsonLd } from "@/lib/seo";
 import { sourceLabels, t, type Locale } from "@/lib/i18n";
 import PromptList from "@/components/PromptList";
 import LangSwitcher from "@/components/LangSwitcher";
@@ -24,7 +25,7 @@ export default async function Home({
         <header className="border-b border-stone-800 bg-stone-900/50 sticky top-0 z-10 backdrop-blur-sm">
           <div className="max-w-5xl mx-auto px-4 py-6">
             <div className="flex items-center justify-between gap-4">
-              <h1 className="text-2xl font-bold tracking-tight">🍌 {t(loc, "title")}</h1>
+              <h1 className="text-2xl font-bold tracking-tight">🖼️ {t(loc, "title")}</h1>
               <LangSwitcher locale={loc} />
             </div>
           </div>
@@ -36,22 +37,8 @@ export default async function Home({
     );
   }
 
-  const allTags = getAllTags(prompts);
   const labels = sourceLabels[loc];
-  const collectionJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: t(loc, "title"),
-    description: t(loc, "subtitle", { total: String(total) }),
-    inLanguage: loc === "en" ? "en" : "zh-CN",
-    url: pageUrl,
-    isPartOf: {
-      "@type": "WebSite",
-      name: "Nano Banana Prompts",
-      url: baseUrl,
-    },
-    numberOfItems: total,
-  };
+  const collectionJsonLd = buildHomeJsonLd({ baseUrl, locale: loc, total });
 
   return (
     <main className="min-h-screen">
@@ -64,7 +51,7 @@ export default async function Home({
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                🍌 {t(loc, "title")}
+                🖼️ {t(loc, "title")}
               </h1>
               <p className="text-stone-400 mt-1 text-sm">
                 {t(loc, "subtitle", { total: String(total) })}
@@ -77,12 +64,7 @@ export default async function Home({
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <Suspense fallback={<div className="py-8 text-stone-500 text-center">{t(loc, "searchPlaceholder")}</div>}>
-          <PromptList
-            prompts={prompts}
-            allTags={allTags}
-            sourceLabels={labels}
-            locale={loc}
-          />
+          <PromptList prompts={prompts} sourceLabels={labels} locale={loc} />
         </Suspense>
       </div>
     </main>

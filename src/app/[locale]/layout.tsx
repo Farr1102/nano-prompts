@@ -15,31 +15,43 @@ export async function generateMetadata({
   const isEn = locale === "en";
 
   const title = isEn
-    ? "Nano Banana Prompts - AI Prompt Library"
-    : "Nano Banana 提示词库 - AI 提示词精选";
+    ? "Multi-model Image Prompts - Nano Banana & GPT Image 2"
+    : "多模型图像提示词库 - Nano Banana 与 GPT Image 2";
   const description = isEn
-    ? "Curated prompts for Nano Banana & Nano Banana Pro. Search, filter by tags, one-click copy."
-    : "Nano Banana 与 Nano Banana Pro 精选提示词集合，支持搜索、标签筛选、一键复制";
+    ? "Curated image prompts for Nano Banana, Nano Banana Pro, and GPT Image 2. Search, filter by model and tags, one-click copy."
+    : "整合 Nano Banana、Nano Banana Pro、GPT Image 2 等图像模型提示词，支持按模型与标签筛选、一键复制。";
 
   const baseUrl = getSiteBaseUrl();
   const canonical = locale === "zh" ? `${baseUrl}/zh` : `${baseUrl}/en`;
 
   return {
-    title,
+    title: {
+      default: title,
+      template: isEn ? "%s · Multi-model Image Prompts" : "%s · 多模型图像提示词库",
+    },
     description,
+    applicationName: isEn ? "Multi-model Image Prompts" : "多模型图像提示词库",
     keywords: isEn
-      ? ["Nano Banana", "AI prompts", "prompt library", "Nano Banana Pro", "Claude", "Gemini"]
-      : ["Nano Banana", "提示词", "AI 提示词", "Nano Banana Pro", "Claude", "Gemini"],
+      ? [
+          "Nano Banana",
+          "GPT Image 2",
+          "AI prompts",
+          "prompt library",
+          "Nano Banana Pro",
+          "image generation",
+          "OpenAI",
+        ]
+      : ["Nano Banana", "GPT Image 2", "提示词", "AI 提示词", "Nano Banana Pro", "图像生成", "OpenAI"],
     openGraph: {
       title,
       description,
       url: canonical,
-      siteName: isEn ? "Nano Banana Prompts" : "Nano Banana 提示词库",
+      siteName: isEn ? "Multi-model Image Prompts" : "多模型图像提示词库",
       locale: isEn ? "en_US" : "zh_CN",
       type: "website",
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
     },

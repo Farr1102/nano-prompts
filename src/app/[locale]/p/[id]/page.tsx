@@ -3,7 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
-import { getPromptsData } from "@/lib/prompts";
+import { getPromptsData } from "@/lib/get-prompts-data";
+import { getPromptModel } from "@/lib/prompts";
 import { remoteImageIsOptimizable } from "@/lib/remote-image";
 import { getSiteBaseUrl } from "@/lib/site";
 import { sourceLabels, t, type Locale } from "@/lib/i18n";
@@ -40,7 +41,7 @@ export async function generateMetadata({
 
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const isEn = loc === "en";
-  const title = `${item.title} - ${t(loc, "title")}`;
+  const title = item.title;
   const description = item.prompt.replace(/\s+/g, " ").trim().slice(0, 160);
   const baseUrl = getSiteBaseUrl();
   const canonical = `${baseUrl}/${loc}/p/${item.id}`;
@@ -49,7 +50,13 @@ export async function generateMetadata({
   return {
     title,
     description,
-    keywords: [...item.tags, item.source, "Nano Banana", "AI prompt", "prompt library"],
+    keywords: [
+      ...item.tags,
+      item.source,
+      getPromptModel(item),
+      "AI prompt",
+      "prompt library",
+    ],
     alternates: {
       canonical,
       languages: {
@@ -63,7 +70,7 @@ export async function generateMetadata({
       description,
       url: canonical,
       type: "article",
-      siteName: isEn ? "Nano Banana Prompts" : "Nano Banana 提示词库",
+      siteName: isEn ? "Multi-model Image Prompts" : "多模型图像提示词库",
       locale: isEn ? "en_US" : "zh_CN",
       images: image,
     },
@@ -164,9 +171,22 @@ export default async function PromptPage({
       <div className="max-w-5xl mx-auto px-4 py-8">
         <article className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-stone-100 mb-4">{item.title}</h1>
-          {item.author && (
+          {(item.author || item.source) && (
             <p className="text-stone-500 text-sm mb-4">
-              {t(loc, "by")} @{item.author} · {labels[item.source] || item.source}
+              {item.author ? (
+                <>
+                  {t(loc, "by")} @{item.author}
+                  {item.source ? " · " : ""}
+                </>
+              ) : null}
+              {item.source ? <>{labels[item.source] || item.source}</> : null}
+              <span className="text-stone-600">
+                {" "}
+                ·{" "}
+                {getPromptModel(item) === "gpt-image-2"
+                  ? t(loc, "modelGptImage2")
+                  : t(loc, "modelNanoBanana")}
+              </span>
             </p>
           )}
           {item.tags?.length > 0 && (

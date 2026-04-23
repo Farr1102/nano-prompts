@@ -1,9 +1,21 @@
+export type PromptModelId = "nano-banana" | "gpt-image-2";
+
 export interface PromptItem {
   id: string;
   title: string;
   author: string;
   link?: string;
-  source: "pro" | "banana" | "nano-pro" | "awesome" | "zizheruan" | "antigravity" | "jimmy";
+  source:
+    | "pro"
+    | "banana"
+    | "nano-pro"
+    | "awesome"
+    | "zizheruan"
+    | "antigravity"
+    | "jimmy"
+    | "gpt-image-awesome";
+  /** 适用模型族，缺省视为 nano-banana（兼容旧数据） */
+  model?: PromptModelId;
   tags: string[];
   input?: string;
   prompt: string;
@@ -11,33 +23,15 @@ export interface PromptItem {
   imageUrl?: string;
 }
 
+export function getPromptModel(item: PromptItem): PromptModelId {
+  return item.model ?? "nano-banana";
+}
+
 export interface PromptsData {
   version: number;
   updatedAt: string;
   total: number;
   prompts: PromptItem[];
-}
-
-let cachedData: PromptsData | null = null;
-
-export function getPromptsData(): PromptsData {
-  if (cachedData) return cachedData;
-
-  if (typeof window !== "undefined") {
-    return { version: 0, updatedAt: "", total: 0, prompts: [] };
-  }
-
-  const fs = require("fs");
-  const path = require("path");
-  const filePath = path.join(process.cwd(), "public", "prompts.json");
-
-  if (!fs.existsSync(filePath)) {
-    return { version: 0, updatedAt: "", total: 0, prompts: [] };
-  }
-
-  const data = JSON.parse(fs.readFileSync(filePath, "utf-8")) as PromptsData;
-  cachedData = data;
-  return data;
 }
 
 export function getAllTags(prompts: PromptItem[]): string[] {

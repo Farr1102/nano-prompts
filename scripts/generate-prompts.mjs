@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 从 data.md, nano-pro.md, new.md 生成统一的 prompts.json
+ * 从各数据源 md 生成统一的 prompts.json（多模型：Nano Banana、GPT Image 2 等）
  */
 import fs from "fs";
 import path from "path";
@@ -56,7 +56,8 @@ function parseDataMd(content) {
         author,
         link,
         source,
-        tags: [source],
+        model: "nano-banana",
+        tags: [source, "nano-banana"],
         input,
         prompt,
         note,
@@ -120,7 +121,8 @@ function parseNanoPro(content) {
       author,
       link,
       source: "nano-pro",
-      tags: ["nano-pro"],
+      model: "nano-banana",
+      tags: ["nano-pro", "nano-banana"],
       prompt,
       note,
       imageUrl,
@@ -160,7 +162,8 @@ function parseZizheruan(content) {
       author,
       link,
       source: "zizheruan",
-      tags: ["zizheruan"],
+      model: "nano-banana",
+      tags: ["zizheruan", "nano-banana"],
       prompt,
       imageUrl,
     });
@@ -200,11 +203,107 @@ function parseJimmy(content) {
       author,
       link,
       source: "jimmy",
-      tags: ["jimmy"],
+      model: "nano-banana",
+      tags: ["jimmy", "nano-banana"],
       prompt,
       note,
       imageUrl,
     });
+  }
+  return examples;
+}
+
+// 解析 gpt-image.md（ZeroLu/awesome-gpt-image，GPT Image 2）
+function parseGptImageAwesome(content) {
+  const examples = [];
+  const RAW_BASE = "https://raw.githubusercontent.com/ZeroLu/awesome-gpt-image/main/";
+  const sections = content.split(/(?=^## [^#])/m).filter((s) => s.trim());
+
+  for (const section of sections) {
+    const secMatch = section.match(/^##\s+(.+)$/m);
+    if (!secMatch) continue;
+    const sectionTitle = secMatch[1].trim();
+    const sectionLower = sectionTitle.toLowerCase();
+    if (
+      sectionLower.includes("table of contents") ||
+      sectionLower.startsWith("why gpt image") ||
+      sectionLower.includes("contributing")
+    ) {
+      continue;
+    }
+
+    const categoryTag =
+      sectionTitle
+        .replace(/^#{1,6}\s*/, "")
+        .replace(/^[^\p{L}\p{N}\u4e00-\u9fff]+\s*/u, "")
+        .trim() || sectionTitle;
+
+    const subparts = section.split(/(?=^### )/m).filter((p) => p.trim());
+    for (const part of subparts) {
+      if (!/^###\s+/m.test(part)) continue;
+      const headerMatch = part.match(/^###\s+(.+)$/m);
+      if (!headerMatch) continue;
+      const title = headerMatch[1].trim();
+
+      const promptMatch = part.match(/\*\*Prompt:\*\*\s*\n```(?:text)?\s*\n([\s\S]*?)```/);
+      const prompt = promptMatch ? promptMatch[1].trim() : "";
+      if (!prompt) continue;
+
+      let imageUrl;
+      const hasGptImageCol = /\|\s*GPT[- ]?Image\b/i.test(part);
+      const htmlImgs = [...part.matchAll(/<img[^>]+src="([^"]+)"[^>]*>/gi)];
+      if (htmlImgs.length >= 2 && hasGptImageCol) {
+        imageUrl = htmlImgs[1][1];
+      } else {
+        imageUrl = htmlImgs[0]?.[1];
+      }
+      if (!imageUrl) {
+        const mdImgs = [...part.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)];
+        if (mdImgs.length >= 2 && hasGptImageCol) {
+          imageUrl = mdImgs[1][1];
+        } else {
+          imageUrl = mdImgs[0]?.[1];
+        }
+      }
+      if (imageUrl && imageUrl.startsWith("assets/")) {
+        imageUrl = RAW_BASE + imageUrl;
+      }
+      if (imageUrl && imageUrl.includes("pbs.twimg.com") && !imageUrl.includes(":")) {
+        imageUrl = imageUrl.replace(/\.(jpg|png|webp)(\?|$)/, ".$1:large$2");
+      }
+
+      const sourceLine =
+        part.match(/\*\*Source:\*\*\s*([^\n]+)/)?.[1] || part.match(/\*Source:\s*([^\n]+)/)?.[1];
+      let author = "";
+      let link;
+      if (sourceLine) {
+        const atMatch = sourceLine.match(/\[@?([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+        if (atMatch) {
+          author = atMatch[1].replace(/^@/, "");
+          link = atMatch[2];
+        } else {
+          const nameMatch = sourceLine.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
+          if (nameMatch) {
+            author = nameMatch[1];
+            link = nameMatch[2];
+          }
+        }
+      }
+
+      const tags = ["gpt-image-2", "gpt-image-awesome", categoryTag];
+
+      examples.push({
+        id: null,
+        title,
+        author,
+        link,
+        source: "gpt-image-awesome",
+        model: "gpt-image-2",
+        tags,
+        prompt,
+        imageUrl,
+      });
+    }
   }
   return examples;
 }
@@ -237,7 +336,7 @@ function parseNewMd(content) {
     const linkMatch = part.match(/\*\*Source:\*\*\s*\[[^\]]+\]\((https?:\/\/[^)]+)\)/);
     const link = linkMatch ? linkMatch[1] : undefined;
 
-    const tags = ["awesome"];
+    const tags = ["awesome", "nano-banana"];
     if (category) tags.push(category);
 
     const badges = [...part.matchAll(/!\[([^\]]+)\]\([^)]+\)/g)];
@@ -259,6 +358,7 @@ function parseNewMd(content) {
       author,
       link,
       source: "awesome",
+      model: "nano-banana",
       tags,
       prompt,
       note,
@@ -276,6 +376,7 @@ const SOURCE_ORDER = [
   { file: "zizheruan.md", parser: parseZizheruan },
   { file: "antigravity.md", parser: parseNanoPro },
   { file: "jimmy.md", parser: parseJimmy },
+  { file: "gpt-image.md", parser: parseGptImageAwesome },
 ];
 
 function main() {
@@ -290,7 +391,12 @@ function main() {
     let items = parser(content);
 
     if (file === "antigravity.md") {
-      items = items.map((item) => ({ ...item, source: "antigravity", id: item.id.replace("nano-pro-", "antigravity-"), tags: ["antigravity"] }));
+      items = items.map((item) => ({
+        ...item,
+        source: "antigravity",
+        id: item.id.replace("nano-pro-", "antigravity-"),
+        tags: ["antigravity", "nano-banana"],
+      }));
     }
 
     const seen = new Set(all.map((x) => x.id));
@@ -300,7 +406,15 @@ function main() {
         item.id = `${item.source}-${idCounter++}`;
       }
       seen.add(item.id);
-      all.push(item);
+      const model = item.model || "nano-banana";
+      const tags = item.tags || [];
+      const withModelTag =
+        model === "nano-banana" && !tags.includes("nano-banana")
+          ? [...tags, "nano-banana"]
+          : model === "gpt-image-2" && !tags.includes("gpt-image-2")
+            ? [...tags, "gpt-image-2"]
+            : tags;
+      all.push({ ...item, model, tags: withModelTag });
     }
   }
 
