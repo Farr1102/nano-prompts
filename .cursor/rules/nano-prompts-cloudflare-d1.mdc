@@ -13,7 +13,7 @@ alwaysApply: true
 
 - **`wrangler.toml`**：`binding = "DB"` ↔ Worker 里 **`env.DB`**；**`database_name`** 与 **`wrangler d1 create`** / **`d1 execute`** 使用的名称一致；**`database_id`** 须为控制台/创建命令给出的 **UUID**。
 - 列表读库：**`workers/prompts-api`**，路由 **`GET /api/prompts`**（分页）、**`GET /api/prompts?id=`**（单条）。
-- 前端可选 **`NEXT_PUBLIC_PROMPTS_WORKER_URL`**（Worker 根 URL，无尾斜杠）走 D1；未设置则仍用 **`/prompts.json`**。
+- 前端可选 **`NEXT_PUBLIC_PROMPTS_WORKER_URL`**（Worker 根 URL，无尾斜杠）走 D1；未设置则仍用 **`/prompts.json`**。本地：复制 **`.env.example`** 为 **`.env.local`**（已 gitignore），**`next build` / `next dev`** 会自动读入并打进 **`NEXT_PUBLIC_*`** 客户端包。
 
 ## npm 脚本（建议）
 
