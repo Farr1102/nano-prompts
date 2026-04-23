@@ -1,0 +1,49 @@
+---
+description: Cloudflare D1 / Worker、wrangler 脚本与灌库约定（对齐 coin-history 工作流）
+alwaysApply: true
+---
+
+# nano-prompts · Cloudflare D1 / Worker
+
+## 前置
+
+- 本机已 **`npx wrangler login`**，**`npx wrangler whoami`** 有账号输出。
+
+## 配置
+
+- **`wrangler.toml`**：`binding = "DB"` ↔ Worker 里 **`env.DB`**；**`database_name`** 与 **`wrangler d1 create`** / **`d1 execute`** 使用的名称一致；**`database_id`** 须为控制台/创建命令给出的 **UUID**。
+- 列表读库：**`workers/prompts-api`**，路由 **`GET /api/prompts`**（分页）、**`GET /api/prompts?id=`**（单条）。
+- 前端可选 **`NEXT_PUBLIC_PROMPTS_WORKER_URL`**（Worker 根 URL，无尾斜杠）走 D1；未设置则仍用 **`/prompts.json`**。
+
+## npm 脚本（建议）
+
+| 脚本 | 作用 |
+|------|------|
+| **`cf:d1:create`** | 新建远程 D1 **`nano-prompts`**（已存在则勿重复执行，改用手动 id） |
+| **`cf:migrate:local`** / **`cf:migrate:remote`** | 应用 **`d1/migrations/`** |
+| **`d1:sync`** | 生成 **`d1/.last-sync.sql`**（upsert，无 BEGIN/COMMIT） |
+| **`d1:apply`** | `generate` + **`d1:sync --apply`**，远程 execute 灌入/更新 |
+| **`worker:deploy`** | **`wrangler deploy`** 部署读库 API |
+
+## 迁移
+
+- 只追加新文件如 **`0002_*.sql`**，勿改已在远端应用过的迁移。
+
+## 灌库（prompts）
+
+- **源**：**`npm run generate`** → **`public/prompts.json`**。
+- **入 D1**：**`npm run d1:apply`**（或 `d1:sync` 后手动 `wrangler d1 execute nano-prompts --remote --file=d1/.last-sync.sql`）。
+- **远程 execute 的 SQL**：勿含 **`BEGIN` / `COMMIT` / `SAVEPOINT`**（`d1-sync` 已遵守）。
+
+## 联调顺序（新库）
+
+1. **`cf:d1:create`** → 把 **`database_id`** 写入 **`wrangler.toml`**。
+2. **`cf:migrate:remote`**。
+3. **`npm run d1:apply`**（需已 `generate`）。
+4. **`npm run worker:deploy`**。
+5. 静态站构建设置 **`NEXT_PUBLIC_PROMPTS_WORKER_URL`**（当前部署示例：`https://nano-prompts-api.farr1102work.workers.dev`）。
+
+## 检查清单
+
+- 改 **`generate-prompts` / 源 md** → **`generate`** → **`d1:apply`** → 按需 **`worker:deploy`**。
+- 改 **表结构** → 新迁移 + 更新 **Worker 列映射** + **`d1-sync` 列清单**。

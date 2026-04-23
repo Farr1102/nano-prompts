@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPromptsData } from "@/lib/get-prompts-data";
-import { getPromptModel } from "@/lib/prompts";
+import { getAllTags, getPromptModel } from "@/lib/prompts";
+import { filterByModel } from "@/lib/prompt-query";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { buildModelHubJsonLd, isIndexableModelSlug, type IndexableModelSlug } from "@/lib/seo";
 import { getSiteBaseUrl } from "@/lib/site";
@@ -98,6 +99,7 @@ export default async function ModelHubPage({
   const { prompts } = data;
   const baseUrl = getSiteBaseUrl();
   const count = prompts.filter((p) => getPromptModel(p) === model).length;
+  const tagsForModelCorpus = getAllTags(filterByModel(prompts, model));
 
   if (!prompts?.length) {
     return (
@@ -148,7 +150,7 @@ export default async function ModelHubPage({
             <div className="py-12 text-center text-sm text-apple-tertiary">{t(loc, "searchPlaceholder")}</div>
           }
         >
-          <PromptList prompts={prompts} locale={loc} />
+          <PromptList locale={loc} tagsForModelCorpus={tagsForModelCorpus} />
         </Suspense>
       </div>
     </main>

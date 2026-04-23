@@ -45,6 +45,9 @@ next-env.d.ts
 
 .cursorignore
 
+d1/.last-sync.sql
+
+.wrangler/
 
 .gitlab-ci.yml
 Web.pem

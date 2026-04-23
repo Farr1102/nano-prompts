@@ -1,0 +1,35 @@
+# 定时/手动将 prompts 同步到 Cloudflare D1（依赖 content_hash 的 upsert，仅变更时更新）
+# 需在仓库 Secrets 配置 CLOUDFLARE_API_TOKEN，并在 wrangler.toml 填写真实 database_id
+name: Sync prompts to D1
+
+on:
+  workflow_dispatch:
+  # 配置好 CLOUDFLARE_API_TOKEN 与 wrangler.toml 的 database_id 后，可取消下行注释做定时同步：
+  # schedule:
+  #   - cron: "30 8 * * 1"
+
+jobs:
+  d1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Fetch sources & generate prompts.json
+        run: node scripts/fetch-sources.mjs && node scripts/generate-prompts.mjs
+
+      - name: Apply D1 migrations (remote)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler d1 migrations apply nano-prompts --remote
+
+      - name: Upsert prompts (diff by content_hash)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node scripts/d1-sync.mjs --apply

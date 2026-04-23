@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getPromptsData } from "@/lib/get-prompts-data";
+import { getAllTags } from "@/lib/prompts";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getSiteBaseUrl } from "@/lib/site";
 import { buildHomeJsonLd } from "@/lib/seo";
@@ -16,6 +17,7 @@ export default async function Home({
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const data = getPromptsData();
   const { prompts, total } = data;
+  const tagsForModelCorpus = getAllTags(prompts);
   const baseUrl = getSiteBaseUrl();
 
   if (!prompts?.length) {
@@ -64,7 +66,7 @@ export default async function Home({
             <div className="py-12 text-center text-sm text-apple-tertiary">{t(loc, "searchPlaceholder")}</div>
           }
         >
-          <PromptList prompts={prompts} locale={loc} />
+          <PromptList locale={loc} tagsForModelCorpus={tagsForModelCorpus} />
         </Suspense>
       </div>
     </main>

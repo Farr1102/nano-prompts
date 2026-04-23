@@ -1,0 +1,15 @@
+# Cloudflare：D1 + Worker（列表读库 API）
+# 迁移：npx wrangler d1 migrations apply nano-prompts --remote
+# 同步数据：npm run generate && npm run d1:sync -- --apply
+# 部署 Worker：npm run worker:deploy
+# 前端走 Worker：NEXT_PUBLIC_PROMPTS_WORKER_URL=https://nano-prompts-api.farr1102work.workers.dev（无尾斜杠）
+
+name = "nano-prompts-api"
+main = "workers/prompts-api/index.js"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nano-prompts"
+database_id = "ee47da00-f050-4511-a59d-fa5d461d3c01"
+migrations_dir = "d1/migrations"

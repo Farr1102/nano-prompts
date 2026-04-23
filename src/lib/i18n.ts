@@ -51,6 +51,9 @@ export const translations = {
     sidebarTagsHeading: "标签",
     scrollRowPrev: "向左滑动",
     scrollRowNext: "向右滑动",
+    listLoading: "正在加载…",
+    loadingMore: "加载更多…",
+    listLoadError: "列表加载失败，请刷新重试",
   },
   en: {
     title: "Multi-model Image Prompts",
@@ -101,6 +104,9 @@ export const translations = {
     sidebarTagsHeading: "Tags",
     scrollRowPrev: "Scroll left",
     scrollRowNext: "Scroll right",
+    listLoading: "Loading…",
+    loadingMore: "Loading more…",
+    listLoadError: "Could not load prompts. Refresh and try again.",
   },
 } as const;
 
@@ -113,6 +119,8 @@ export const sourceLabels: Record<Locale, Record<string, string>> = {
     antigravity: "Antigravity 900+",
     jimmy: "JimmyLv 精选",
     "gpt-image-awesome": "Awesome GPT Image 2",
+    "youmind-gpt-image-2": "YouMind GPT Image 2",
+    "anil-gpt-image-2": "Anil GPT Image 2 API",
   },
   en: {
     pro: "Nano Banana Pro",
@@ -122,6 +130,8 @@ export const sourceLabels: Record<Locale, Record<string, string>> = {
     antigravity: "Antigravity 900+",
     jimmy: "JimmyLv Picks",
     "gpt-image-awesome": "Awesome GPT Image 2",
+    "youmind-gpt-image-2": "YouMind GPT Image 2",
+    "anil-gpt-image-2": "Anil GPT Image 2 API",
   },
 };
 

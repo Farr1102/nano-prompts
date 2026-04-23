@@ -2,14 +2,19 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { getAllTags, getPromptModel, type PromptItem, type PromptModelId } from "@/lib/prompts";
+import { getPromptModel, type PromptItem, type PromptModelId } from "@/lib/prompts";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import SearchBar from "./SearchBar";
 import DetailModal from "./DetailModal";
 import PromptMasonryGrid from "./PromptMasonryGrid";
+import type { QueryModel } from "@/lib/prompt-query";
+import { fetchPromptById, fetchPromptPage } from "@/lib/prompts-client-api";
 
 const TAG_VISIBLE = 32;
+const PAGE_SIZE = 24;
+/** 触底前提前触发加载（react-masonry-css 无内置无限滚动，用 IO + rootMargin 预取） */
+const INFINITE_ROOT_MARGIN = "380px";
 
 type ModelParam = "all" | "nano-banana" | "gpt-image-2";
 
@@ -24,11 +29,12 @@ function getListPath(locale: Locale, model: ModelParam): string {
 }
 
 export default function PromptList({
-  prompts,
   locale,
+  tagsForModelCorpus,
 }: {
-  prompts: PromptItem[];
   locale: Locale;
+  /** 仅按当前模型 Tab 的语料算标签（与关键词 / 已选标签无关），与改版前一致 */
+  tagsForModelCorpus: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,6 +55,7 @@ export default function PromptList({
 
   const queryModel = normalizeModelParam(searchParams.get("model"));
   const effectiveModel: ModelParam = hubModel ?? queryModel;
+  const queryModelParam: QueryModel = effectiveModel;
 
   const listPath = useMemo(
     () => getListPath(locale, effectiveModel),
@@ -60,6 +67,19 @@ export default function PromptList({
   const [selected, setSelected] = useState<PromptItem | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const pendingPRef = useRef<string | undefined>(undefined);
+
+  const [items, setItems] = useState<PromptItem[]>([]);
+  const [listTotal, setListTotal] = useState(0);
+  const [listLoading, setListLoading] = useState(true);
+  const [moreLoading, setMoreLoading] = useState(false);
+  const [listError, setListError] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+
+  const itemsRef = useRef<PromptItem[]>([]);
+  itemsRef.current = items;
+
+  /** 过滤条件快速变化时丢弃过期的分页结果 */
+  const listReqRef = useRef(0);
 
   useEffect(() => {
     setKeyword(qFromUrl);
@@ -81,23 +101,108 @@ export default function PromptList({
     router.replace(dest);
   }, [pathname, router, searchParams]);
 
-  const corpus = useMemo(() => {
-    if (effectiveModel === "all") return prompts;
-    return prompts.filter((p) => getPromptModel(p) === (effectiveModel as PromptModelId));
-  }, [prompts, effectiveModel]);
+  const tagsKey = useMemo(() => [...selectedTags].sort().join(","), [selectedTags]);
 
-  const allTags = useMemo(() => getAllTags(corpus), [corpus]);
+  const fetchPage = useCallback(
+    async (offset: number, mode: "reset" | "append") => {
+      const reqId = ++listReqRef.current;
+
+      if (mode === "reset") {
+        setListLoading(true);
+        setListError(false);
+      } else {
+        setMoreLoading(true);
+      }
+
+      try {
+        const data = await fetchPromptPage({
+          model: queryModelParam,
+          q: keyword.trim(),
+          tags: tagsKey ? tagsKey.split(",").filter(Boolean) : [],
+          limit: PAGE_SIZE,
+          offset,
+        });
+        if (reqId !== listReqRef.current) return;
+        setListTotal(data.total);
+        setHasMore(data.hasMore);
+        if (mode === "reset") setItems(data.items);
+        else setItems((prev) => [...prev, ...data.items]);
+      } catch {
+        if (reqId !== listReqRef.current) return;
+        if (mode === "reset") {
+          setListError(true);
+          setItems([]);
+          setListTotal(0);
+          setHasMore(false);
+        }
+      } finally {
+        if (reqId === listReqRef.current) {
+          setListLoading(false);
+          setMoreLoading(false);
+        }
+      }
+    },
+    [queryModelParam, keyword, tagsKey]
+  );
 
   useEffect(() => {
-    // Ignore stale URL updates while a newer open/close action is pending.
+    fetchPage(0, "reset");
+  }, [fetchPage]);
+
+  const loadMore = useCallback(() => {
+    if (listLoading || moreLoading || !hasMore) return;
+    fetchPage(itemsRef.current.length, "append");
+  }, [fetchPage, listLoading, moreLoading, hasMore]);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { root: null, rootMargin: INFINITE_ROOT_MARGIN, threshold: 0 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [loadMore, hasMore, items.length]);
+
+  const allTags = tagsForModelCorpus;
+
+  useEffect(() => {
     if (pendingPRef.current !== undefined && pFromUrl !== pendingPRef.current) return;
     if (pendingPRef.current !== undefined && pFromUrl === pendingPRef.current) {
       pendingPRef.current = undefined;
     }
 
-    const item = pFromUrl ? prompts.find((x) => x.id === pFromUrl) : null;
-    setSelected(item ?? null);
-  }, [pFromUrl, prompts]);
+    if (!pFromUrl) {
+      setSelected(null);
+      return;
+    }
+    const local = itemsRef.current.find((x) => x.id === pFromUrl);
+    if (local) {
+      setSelected(local);
+      return;
+    }
+    let cancelled = false;
+    fetchPromptById(pFromUrl)
+      .then((item) => {
+        if (!cancelled) setSelected(item);
+      })
+      .catch(() => {
+        if (!cancelled) setSelected(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pFromUrl]);
+
+  useEffect(() => {
+    if (!pFromUrl) return;
+    const local = items.find((x) => x.id === pFromUrl);
+    if (local) setSelected(local);
+  }, [pFromUrl, items]);
 
   const updateUrl = useCallback(
     (updates: { q?: string; tags?: string[]; p?: string }) => {
@@ -147,35 +252,8 @@ export default function PromptList({
   const openPrompt = (item: PromptItem | null) => {
     pendingPRef.current = item?.id ?? "";
     setSelected(item);
-    // Pass empty string when closing so `p` is explicitly removed from URL.
     updateUrl({ p: item?.id ?? "" });
   };
-
-  const filtered = useMemo(() => {
-    let list = corpus;
-
-    if (keyword.trim()) {
-      const k = keyword.toLowerCase();
-      list = list.filter(
-        (e) =>
-          e.title.toLowerCase().includes(k) ||
-          e.author.toLowerCase().includes(k) ||
-          e.prompt.toLowerCase().includes(k) ||
-          (e.tags || []).some((t) => t.toLowerCase().includes(k))
-      );
-    }
-
-    if (selectedTags.size > 0) {
-      list = list.filter((e) =>
-        (e.tags || []).some((t) => selectedTags.has(t))
-      );
-    }
-
-    return list;
-  }, [corpus, keyword, selectedTags]);
-
-  const visibleTags = tagsExpanded ? allTags : allTags.slice(0, TAG_VISIBLE);
-  const hasMoreTags = allTags.length > TAG_VISIBLE;
 
   const setModelFilter = (next: ModelParam) => {
     setSelectedTags(new Set());
@@ -199,6 +277,11 @@ export default function PromptList({
     { id: "nano-banana" as const, labelKey: "modelNanoBanana" as const },
     { id: "gpt-image-2" as const, labelKey: "modelGptImage2" as const },
   ];
+
+  const visibleTags = tagsExpanded ? allTags : allTags.slice(0, TAG_VISIBLE);
+  const hasMoreTags = allTags.length > TAG_VISIBLE;
+
+  const filteredCount = listTotal;
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-start lg:gap-10 xl:gap-12">
@@ -241,7 +324,7 @@ export default function PromptList({
         </div>
 
         <p className="px-1 text-sm text-apple-secondary">
-          {t(locale, "filterResult", { count: String(filtered.length) })}
+          {t(locale, "filterResult", { count: String(filteredCount) })}
           {selectedTags.size > 0 && (
             <button
               type="button"
@@ -282,12 +365,20 @@ export default function PromptList({
           </div>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center text-apple-secondary">
-            {t(locale, "noResults")}
-          </div>
+        {listError ? (
+          <div className="py-16 text-center text-apple-secondary">{t(locale, "listLoadError")}</div>
+        ) : listLoading ? (
+          <div className="py-16 text-center text-sm text-apple-tertiary">{t(locale, "listLoading")}</div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center text-apple-secondary">{t(locale, "noResults")}</div>
         ) : (
-          <PromptMasonryGrid items={filtered} locale={locale} onOpen={openPrompt} />
+          <>
+            <PromptMasonryGrid items={items} locale={locale} onOpen={openPrompt} />
+            {hasMore && <div ref={sentinelRef} className="h-1 w-full" aria-hidden />}
+            {moreLoading && (
+              <p className="py-4 text-center text-sm text-apple-tertiary">{t(locale, "loadingMore")}</p>
+            )}
+          </>
         )}
       </div>
 

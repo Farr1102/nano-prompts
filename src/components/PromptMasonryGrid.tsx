@@ -80,7 +80,7 @@ function PromptImageTile({
 }
 
 /**
- * CSS 多列瀑布流（[react-masonry-css](https://github.com/paulcollett/react-masonry-css)），缩略图 + 右上角模型角标，点击打开详情弹窗。
+ * CSS 多列瀑布流（[react-masonry-css](https://github.com/paulcollett/react-masonry-css)）——仅布局；无限滚动与分页由 PromptList + IntersectionObserver 处理。
  */
 export default function PromptMasonryGrid({
   items,

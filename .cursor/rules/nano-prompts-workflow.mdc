@@ -1,0 +1,27 @@
+---
+description: nano-prompts 协作方式、静态导出与列表分页约定
+alwaysApply: true
+---
+
+# nano-prompts 项目规则
+
+## Agent 行为
+
+- 默认由 Agent **自主完成实现**（跑构建/测试、改代码），**仅在卡点**再向用户求助：缺密钥/账号、不可达私有资源、未明确的产品决策、或阻塞性外部依赖。
+- 回复语言：**中文**（与用户一致）。
+
+## 数据与部署
+
+- 当前 Next 使用 **`output: "export"`**，**不能使用** `app/api` Route Handlers 随静态站点发布。
+- 列表数据默认：**浏览器请求** `public/prompts.json`（一次）+ `queryPrompts` 内存切片（`src/lib/prompts-client-api.ts`）。
+- 可选 **Cloudflare Worker + D1**：见 **`nano-prompts-cloudflare-d1.mdc`**（`cf:*` 脚本、`d1:apply`、`worker:deploy`、**`NEXT_PUBLIC_PROMPTS_WORKER_URL`**）。
+- 生成 corpus：`scripts/generate-prompts.mjs`；写入 D1：`scripts/d1-sync.mjs`。
+
+## 列表 UI
+
+- 瀑布流使用 **[react-masonry-css](https://github.com/paulcollett/react-masonry-css)**：它**只负责列布局**，**不包含**无限滚动。
+- 无限滚动：**IntersectionObserver** + 较大 **`rootMargin`**（触底前预加载）；由 `PromptList` 管理 sentinel 与 `fetchPromptPage`/`loadMore`。
+
+## 代码风格
+
+- 改动保持聚焦；与现有命名、Tailwind 用法一致；无请求不要新增 README。

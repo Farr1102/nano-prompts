@@ -5,14 +5,8 @@ export interface PromptItem {
   title: string;
   author: string;
   link?: string;
-  source:
-    | "pro"
-    | "banana"
-    | "nano-pro"
-    | "awesome"
-    | "antigravity"
-    | "jimmy"
-    | "gpt-image-awesome";
+  /** 数据源 id，与 generate 脚本一致；不限死枚举以免漏类型 */
+  source: string;
   /** 适用模型族，缺省视为 nano-banana（兼容旧数据） */
   model?: PromptModelId;
   tags: string[];
