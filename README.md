@@ -56,6 +56,7 @@ npm run build  # 构建（自动 generate）
   1. 框架预设可选 **无**；**构建命令** `npm run build`；**构建输出目录**填 **`out`**（不要填 `.next`）。
   2. 环境变量 **Production**：`NEXT_PUBLIC_SITE_URL` = `https://你的子域.域名`（须含 `https://`）。
   3. 构建产物为纯静态 HTML（`output: 'export'`），无 Node 运行时；远程图片使用 `next/image` 的 **unoptimized** 模式。
+  4. **依赖安装**：仓库只应保留 **`package-lock.json`**。若存在 **`yarn.lock`**，Pages 会改用 Yarn 4，容易触发 `YN0028 lockfile would have been modified`。请删除 `yarn.lock` 后只用 npm 安装。
 - **部署（Vercel · 完整 Next）**  
   若改回默认 `next build`（去掉 `output: 'export'`）并恢复 middleware，可用 Vercel 托管；当前仓库默认配置面向 **CF Pages 静态**。
 
