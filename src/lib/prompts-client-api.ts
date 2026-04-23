@@ -1,26 +1,55 @@
 /**
  * 列表数据源（浏览器）：
- * - 默认：拉一次 `/prompts.json` + 内存 queryPrompts（静态导出友好）
- * - 可选：设置 `NEXT_PUBLIC_PROMPTS_WORKER_URL` 后走 Cloudflare Worker（D1），路径 `/api/prompts`，响应形状一致
+ * - Worker + D1：`NEXT_PUBLIC_PROMPTS_WORKER_URL`（构建时注入）**或** 运行时请求 **`/prompts-worker.json`**（适合 Cloudflare Pages 未配环境变量仍要打 Worker）
+ * - 否则：拉一次 `/prompts.json` + 内存 queryPrompts
  */
 import type { PromptItem, PromptsData } from "@/lib/prompts";
 import { clampPageSize, queryPrompts, type QueryModel } from "@/lib/prompt-query";
 
-function workerBaseUrl(): string | null {
-  const raw = process.env.NEXT_PUBLIC_PROMPTS_WORKER_URL;
-  if (typeof raw !== "string") return null;
-  const t = raw.trim().replace(/\/$/, "");
-  return t.length > 0 ? t : null;
+/** `undefined` = 尚未解析；`null` = 明确走 prompts.json */
+let resolvedWorkerBase: string | null | undefined = undefined;
+let resolveWorkerPromise: Promise<string | null> | null = null;
+
+async function resolveWorkerBase(): Promise<string | null> {
+  if (resolvedWorkerBase !== undefined) return resolvedWorkerBase;
+  if (!resolveWorkerPromise) {
+    resolveWorkerPromise = (async () => {
+      const fromEnv =
+        typeof process.env.NEXT_PUBLIC_PROMPTS_WORKER_URL === "string"
+          ? process.env.NEXT_PUBLIC_PROMPTS_WORKER_URL.trim().replace(/\/$/, "")
+          : "";
+      if (fromEnv) {
+        resolvedWorkerBase = fromEnv;
+        return fromEnv;
+      }
+      try {
+        const r = await fetch("/prompts-worker.json");
+        if (r.ok) {
+          const j = (await r.json()) as { baseUrl?: unknown };
+          const u = typeof j.baseUrl === "string" ? j.baseUrl.trim().replace(/\/$/, "") : "";
+          if (u) {
+            resolvedWorkerBase = u;
+            return u;
+          }
+        }
+      } catch {
+        /* 无文件或网络错误则回退 json */
+      }
+      resolvedWorkerBase = null;
+      return null;
+    })();
+  }
+  return resolveWorkerPromise;
 }
 
 let cached: PromptsData | null = null;
 let loadPromise: Promise<PromptsData> | null = null;
 
-/** 仅在未配置 Worker 时使用（全量 prompts.json） */
+/** 仅在未使用 Worker 时使用（全量 prompts.json） */
 export async function loadPromptsCorpus(): Promise<PromptsData> {
-  if (workerBaseUrl()) {
+  if (await resolveWorkerBase()) {
     throw new Error(
-      "已设置 NEXT_PUBLIC_PROMPTS_WORKER_URL 时请勿拉全量 corpus，请用 fetchPromptPage / fetchPromptById"
+      "当前使用 Worker 数据源，请勿拉全量 corpus，请用 fetchPromptPage / fetchPromptById"
     );
   }
   if (cached) return cached;
@@ -56,7 +85,7 @@ type PageResponse = {
 };
 
 export async function fetchPromptPage(params: PromptPageParams): Promise<PageResponse> {
-  const base = workerBaseUrl();
+  const base = await resolveWorkerBase();
   const limit = clampPageSize(params.limit, 24);
   const offset = Math.max(0, params.offset);
 
@@ -92,7 +121,7 @@ export async function fetchPromptPage(params: PromptPageParams): Promise<PageRes
 }
 
 export async function fetchPromptById(id: string): Promise<PromptItem | null> {
-  const base = workerBaseUrl();
+  const base = await resolveWorkerBase();
   if (base) {
     const r = await fetch(`${base}/api/prompts?id=${encodeURIComponent(id)}`);
     if (!r.ok) throw new Error(`prompts worker: ${r.status}`);
