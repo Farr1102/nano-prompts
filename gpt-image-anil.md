@@ -8,6 +8,8 @@ A curated collection of high-quality prompts and output examples for **GPT-Image
 
 Whether you're building an image generation app, experimenting with the API, or looking for proven prompt patterns, you'll find ready-to-use prompts here that unlock GPT-Image-2's full potential.
 
+Join subreddit https://www.reddit.com/r/gptimage2/ for discussions around GPT Image 2
+
 > **Want to use GPT-Image-2 without an OpenAI account?** Try **[MuAPI](https://muapi.ai)** — a hosted API that gives you GPT-Image-2 text-to-image and image-to-image with a simple REST call. [Get your API key →](https://muapi.ai)
 
 > **API Usage:** All prompts work with the [OpenAI Images API](https://platform.openai.com/docs/api-reference/images) using model `gpt-image-2`.
