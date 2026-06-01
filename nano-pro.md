@@ -1,5 +1,3 @@
-## 🎬 NEW! Check out [Awesome Happy Horse 1.0](https://github.com/ZeroLu/awesome-happy-horse) — The Hottest AI Video Model of April 2026! 🚀
-
 #### Please also check out 👉 [this awesome repo of Seedance 2.0 prompts!](https://github.com/ZeroLu/awesome-seedance) 👈
 
 # Awesome Nano Banana Pro 🍌
@@ -15,6 +13,12 @@ This repository focuses on **high-fidelity image prompts** sourced from X (Twitt
 
 > **💡 Struggle with Seedance 2.0 Face Detection?**
 > Cyberbara now supports **real face uploads without limits!** Plus, enjoy our massive price drop. [Unlock your limits at cyberbara.com →](https://cyberbara.com/seedance2.0?utm_source=banana)
+
+### Sponsor2: [DolOffer](https://doloffer.com)
+[<img width="600" alt="DolOffer logo" src="./assets/doloffer-logo.png" />](https://doloffer.com?utm_source=nanobanana)
+
+> **Spent too much money on GPT and Claude Pro subscriptions?**
+> DolOffer is a digital subscription sharing and recharge platform for authentic GPT and Claude Pro memberships. Use code `AI8888` at checkout for 10% off. [Save money on your AI subscriptions at doloffer.com →](https://doloffer.com?utm_source=nanobanana)
 
 This repo gets up to **20,000 visitors per day**, [mail me](mailto:iamzerolu@gmail.com) if you want a limited sponsor slot!
 
@@ -1748,6 +1752,7 @@ Keep the tone supportive, simple and clear.
 
 - [Official Prompting Guide](https://blog.google/products/gemini/prompting-tips-nano-banana-pro/) - Learn how to structure your prompts effectively.
 - [How to prompt Nano Banana Pro](https://www.fofr.ai/nano-banana-pro-guide)
+- [Doloffer Guide](https://github.com/Doloffer-g/guide) - A practical guide for DolOffer users to save money on subscriptions like GPT and Claude.
 
 ## 12. Contributing
 
