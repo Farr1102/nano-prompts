@@ -1,11 +1,12 @@
 # Awesome GPT Image 2 🕶️
 
-Last updated on 260629 04:25:38 UTC
+Last updated on 260706 04:03:10 UTC
 
 <img width="100%" alt="Awesome GPT Image 2 Header Banner" src="assets/banner/readme-header-16x9.png" />
 
 [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
 [![Stars](https://img.shields.io/github/stars/ZeroLu/awesome-gpt-image?style=flat-square)](https://github.com/ZeroLu/awesome-gpt-image/stargazers)
+[![AtomGitStars](https://atomgit.com/ZeroLuAtom/awesome-gpt-image/star/badge.svg)](https://atomgit.com/ZeroLuAtom/awesome-gpt-image)
 
 Languages: [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
 
