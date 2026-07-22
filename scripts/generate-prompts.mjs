@@ -361,76 +361,6 @@ function parseYouMindGptImage2(content) {
   }));
 }
 
-/** 英文：标题/提示词/标签中出现则提高排序（小写匹配） */
-const FEMALE_TERMS_EN = [
-  "women",
-  "woman",
-  "girl",
-  "girls",
-  "female",
-  "ladies",
-  "lady",
-  "mother",
-  "mom",
-  "mum",
-  "daughter",
-  "sister",
-  "bride",
-  "actress",
-  "queen",
-  "princess",
-  "goddess",
-  "wife",
-  "girlfriend",
-  "schoolgirl",
-  "businesswoman",
-  "chairwoman",
-];
-
-/** 中文：原样包含即命中 */
-const FEMALE_TERMS_ZH = ["女", "女孩", "女人", "女性", "少女", "美女", "妇人", "女士", "母女", "少女"];
-
-function hasFemaleKeyword(item) {
-  const tags = (item.tags || []).join(" ");
-  const hay = `${item.title}\n${item.prompt}\n${tags}`;
-  const hayLower = hay.toLowerCase();
-  for (const w of FEMALE_TERMS_EN) {
-    if (hayLower.includes(w)) return true;
-  }
-  for (const w of FEMALE_TERMS_ZH) {
-    if (hay.includes(w)) return true;
-  }
-  return false;
-}
-
-/** 排序权重：女性相关 > GPT Image 2 > 其余；同档内仍按文件时间新→旧 */
-function sortPriorityScore(item) {
-  let s = 0;
-  if (hasFemaleKeyword(item)) s += 1000;
-  if (item.model === "gpt-image-2") s += 500;
-  return s;
-}
-
-/**
- * 在保持各模型内部排序不变的前提下，将 nano-banana 与 gpt-image-2 交替拼接，
- * 避免「全部」列表首屏被单一模型占满；单模型筛选后相对顺序不变。
- */
-function interleaveNanoAndGpt(items) {
-  const nano = [];
-  const gpt = [];
-  for (const item of items) {
-    if (item.model === "gpt-image-2") gpt.push(item);
-    else nano.push(item);
-  }
-  const out = [];
-  const n = Math.max(nano.length, gpt.length);
-  for (let k = 0; k < n; k++) {
-    if (k < nano.length) out.push(nano[k]);
-    if (k < gpt.length) out.push(gpt[k]);
-  }
-  return out;
-}
-
 /** peterRooo awesome-gpt-image-2-prompts JSON 数据源（直接 fetch 不依赖本地文件） */
 const PETER_GPT2_JSON_URL =
   "https://raw.githubusercontent.com/peterRooo/awesome-gpt-image-2-prompts/main/data/gpt-image-2-prompts.json";
@@ -489,14 +419,13 @@ const SOURCE_ORDER = [
 async function main() {
   let all = [];
   let idCounter = 1;
-  /** 全量拼接顺序，供同一 mtime 的文件内稳定排序 */
+  /** 全量插入顺序 */
   let sortOrder = 0;
 
   for (const { file, parser } of SOURCE_ORDER) {
     const filePath = path.join(ROOT, file);
     if (!fs.existsSync(filePath)) continue;
 
-    const mtimeMs = fs.statSync(filePath).mtimeMs;
     const content = fs.readFileSync(filePath, "utf-8");
     let items = parser(content);
 
@@ -532,7 +461,6 @@ async function main() {
         ...item,
         model,
         tags: withModelTag,
-        _sortMtime: mtimeMs,
         _sortOrder: sortOrder++,
       });
     }
@@ -543,22 +471,14 @@ async function main() {
   for (const item of peterItems) {
     all.push({
       ...item,
-      _sortMtime: Date.now(),
       _sortOrder: sortOrder++,
     });
   }
 
-  // 优先：含女性相关词、GPT Image 2；再按源文件修改时间新→旧；同一时间戳内保持解析顺序
-  all.sort((a, b) => {
-    const p = sortPriorityScore(b) - sortPriorityScore(a);
-    if (p !== 0) return p;
-    if (b._sortMtime !== a._sortMtime) return b._sortMtime - a._sortMtime;
-    return a._sortOrder - b._sortOrder;
-  });
+  // 按写入顺序排列，最新数据在前
+  all.sort((a, b) => b._sortOrder - a._sortOrder);
 
-  all = interleaveNanoAndGpt(all);
-
-  const prompts = all.map(({ _sortMtime, _sortOrder, ...rest }) => rest);
+  const prompts = all.map(({ _sortOrder, ...rest }) => rest);
 
   const output = {
     version: 1,
