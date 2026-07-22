@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 const IMAGE_BASE = "https://raw.githubusercontent.com/PicoTrex/Awesome-Nano-Banana-images/main/";
+const JIMMY_IMAGE_BASE = "https://cdn.jsdelivr.net/gh/jamez-bondos/awesome-gpt4o-images/";
 
 // 从 new.md 标题提取分类 (e.g. "Profile / Avatar - Title" -> "Profile / Avatar")
 function extractCategory(title) {
@@ -109,8 +110,17 @@ function parseNanoPro(content) {
       const mdImg = part.match(/!\[[^\]]*\]\((https?:\/\/[^)]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^)]*)?)\)/);
       imageUrl = mdImg ? mdImg[1] : undefined;
     }
-    if (imageUrl && imageUrl.includes("pbs.twimg.com") && !imageUrl.includes(":")) {
-      imageUrl = imageUrl.replace(/\.(jpg|png|webp)(\?|$)/, ".$1:large$2");
+    if (!imageUrl) {
+      const fallback = part.match(/!\[[^\]]*\]\((https?:\/\/[^)]+\?(?:[^)]*format=(?:jpg|png|webp|gif)[^)]*))\)/);
+      imageUrl = fallback ? fallback[1] : undefined;
+    }
+    if (imageUrl && imageUrl.includes("pbs.twimg.com")) {
+      if (!imageUrl.includes(":")) {
+        imageUrl = imageUrl.replace(/\.(jpg|png|webp)(\?|$)/, ".$1:large$2");
+      }
+      if (!imageUrl.includes(":large") && !imageUrl.match(/name=/)) {
+        imageUrl += ":large";
+      }
     }
     const subtitleMatch = part.match(/^\*([^*]+)\*/m);
     const note = subtitleMatch ? subtitleMatch[1].trim() : undefined;
@@ -152,7 +162,11 @@ function parseJimmy(content) {
     const imgMatches = [...part.matchAll(/<img[^>]+src="(https?:\/\/[^"]+)"[^>]*>/g)];
     const geminiImg = imgMatches.find((m) => /gemini|chatimg|chatvid/i.test(m[1]));
     const otherImg = imgMatches.find((m) => !/shields\.io|badge|favicon/i.test(m[1]));
-    const imageUrl = geminiImg?.[1] ?? otherImg?.[1];
+    let imageUrl = geminiImg?.[1] ?? otherImg?.[1];
+    if (!imageUrl) {
+      const relImg = part.match(/<img[^>]+src="(cases\/[^"]+\.(?:png|jpg|jpeg|webp|gif))"/);
+      if (relImg) imageUrl = JIMMY_IMAGE_BASE + relImg[1];
+    }
 
     const noteMatch = part.match(/\*Note:([^*]+)\*/);
     const note = noteMatch ? noteMatch[1].trim() : undefined;
@@ -417,6 +431,41 @@ function interleaveNanoAndGpt(items) {
   return out;
 }
 
+/** peterRooo awesome-gpt-image-2-prompts JSON 数据源（直接 fetch 不依赖本地文件） */
+const PETER_GPT2_JSON_URL =
+  "https://raw.githubusercontent.com/peterRooo/awesome-gpt-image-2-prompts/main/data/gpt-image-2-prompts.json";
+
+async function parsePeterImages() {
+  let items;
+  try {
+    const res = await fetch(PETER_GPT2_JSON_URL, {
+      headers: { "User-Agent": "nano-prompt-updater/1.0" },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    items = JSON.parse(await res.text());
+  } catch (err) {
+    console.error(`  [peter-gpt2] fetch failed: ${err.message}, using local cache if available`);
+    const filePath = path.join(ROOT, "peter-gpt2.json");
+    if (fs.existsSync(filePath)) {
+      items = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    } else {
+      return [];
+    }
+  }
+  return items.map((item) => ({
+    id: `peter-gpt2-${item.index}`,
+    title: item.title,
+    author: item.author_name?.replace(/^@/, "") || "",
+    link: item.source_url || undefined,
+    source: "peter-gpt2",
+    model: "gpt-image-2",
+    tags: ["gpt-image-2", "peter-gpt2", item.language || "en", item.category || ""].filter(Boolean),
+    prompt: item.prompt,
+    note: undefined,
+    imageUrl: item.image_url || undefined,
+  }));
+}
+
 // 主流程
 const SOURCE_ORDER = [
   { file: "data.md", parser: parseDataMd },
@@ -434,9 +483,10 @@ const SOURCE_ORDER = [
       }),
   },
   { file: "gpt-image-youmind.md", parser: parseYouMindGptImage2 },
+  // peter-gpt2 为 async JSON fetch，在 main() 中单独处理
 ];
 
-function main() {
+async function main() {
   let all = [];
   let idCounter = 1;
   /** 全量拼接顺序，供同一 mtime 的文件内稳定排序 */
@@ -488,6 +538,16 @@ function main() {
     }
   }
 
+  // peter-gpt2: async fetch JSON source, no local file dependency
+  const peterItems = await parsePeterImages();
+  for (const item of peterItems) {
+    all.push({
+      ...item,
+      _sortMtime: Date.now(),
+      _sortOrder: sortOrder++,
+    });
+  }
+
   // 优先：含女性相关词、GPT Image 2；再按源文件修改时间新→旧；同一时间戳内保持解析顺序
   all.sort((a, b) => {
     const p = sortPriorityScore(b) - sortPriorityScore(a);
@@ -519,4 +579,7 @@ function main() {
   console.log(`Generated prompts.json with ${prompts.length} prompts`);
 }
 
-main();
+main().catch((err) => {
+  console.error("  ✗ Fatal error:", err.message);
+  process.exit(1);
+});
