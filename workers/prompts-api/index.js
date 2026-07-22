@@ -57,7 +57,7 @@ async function loadAllFromD1(env) {
 
   const { results } = await env.DB.prepare(
     `SELECT id, title, author, link, source, model, tags_json, input, prompt, note, image_url
-     FROM prompts ORDER BY created_at DESC`
+     FROM prompts WHERE image_url IS NOT NULL AND image_url != '' ORDER BY created_at DESC`
   ).all();
 
   /** @type {PromptItem[]} */
