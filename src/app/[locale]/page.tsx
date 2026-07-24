@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getPromptsData } from "@/lib/get-prompts-data";
 import { getAllTags } from "@/lib/prompts";
+import { filterWithImages } from "@/lib/prompt-query";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { getSiteBaseUrl } from "@/lib/site";
 import { buildHomeJsonLd } from "@/lib/seo";
@@ -16,7 +17,8 @@ export default async function Home({
   const { locale } = await params;
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const data = getPromptsData();
-  const { prompts, total } = data;
+  const prompts = filterWithImages(data.prompts);
+  const total = prompts.length;
   const tagsForModelCorpus = getAllTags(prompts);
   const baseUrl = getSiteBaseUrl();
 

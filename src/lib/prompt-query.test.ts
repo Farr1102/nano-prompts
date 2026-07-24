@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { queryPrompts, clampPageSize } from "./prompt-query";
+import { queryPrompts, clampPageSize, filterWithImages } from "./prompt-query";
 import type { PromptItem } from "./prompts";
 
 const samples: PromptItem[] = [
@@ -11,6 +11,7 @@ const samples: PromptItem[] = [
     model: "nano-banana",
     tags: ["fruit", "nano-banana"],
     prompt: "red fruit",
+    imageUrl: "https://example.com/a.jpg",
   },
   {
     id: "b",
@@ -20,6 +21,26 @@ const samples: PromptItem[] = [
     model: "gpt-image-2",
     tags: ["fruit", "gpt-image-2"],
     prompt: "yellow",
+    imageUrl: "https://example.com/b.jpg",
+  },
+  {
+    id: "c",
+    title: "Cherry",
+    author: "u3",
+    source: "t",
+    model: "nano-banana",
+    tags: ["fruit", "hidden"],
+    prompt: "red no image",
+  },
+  {
+    id: "d",
+    title: "Date",
+    author: "u4",
+    source: "t",
+    model: "nano-banana",
+    tags: ["fruit", "hidden"],
+    prompt: "blank image",
+    imageUrl: "  ",
   },
 ];
 
@@ -39,6 +60,13 @@ describe("queryPrompts", () => {
     expect(r.length).toBe(2);
     const r2 = queryPrompts(samples, { model: "all", q: "", tags: ["nano-banana"] });
     expect(r2.map((x) => x.id)).toEqual(["a"]);
+  });
+
+  it("filters out prompts without images", () => {
+    expect(filterWithImages(samples).map((x) => x.id)).toEqual(["a", "b"]);
+
+    const r = queryPrompts(samples, { model: "all", q: "red", tags: [] });
+    expect(r.map((x) => x.id)).toEqual(["a"]);
   });
 });
 

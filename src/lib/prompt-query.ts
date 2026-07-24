@@ -26,11 +26,16 @@ export function filterBySelectedTags(prompts: PromptItem[], tags: string[]): Pro
   return prompts.filter((e) => (e.tags || []).some((tag) => set.has(tag)));
 }
 
+export function filterWithImages(prompts: PromptItem[]): PromptItem[] {
+  return prompts.filter((p) => typeof p.imageUrl === "string" && p.imageUrl.trim().length > 0);
+}
+
 export function queryPrompts(
   prompts: PromptItem[],
   opts: { model: QueryModel; q: string; tags: string[] }
 ): PromptItem[] {
-  let list = filterByModel(prompts, opts.model);
+  let list = filterWithImages(prompts);
+  list = filterByModel(list, opts.model);
   list = filterByKeyword(list, opts.q);
   list = filterBySelectedTags(list, opts.tags);
   return list;

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPromptsData } from "@/lib/get-prompts-data";
 import { getAllTags, getPromptModel } from "@/lib/prompts";
-import { filterByModel } from "@/lib/prompt-query";
+import { filterByModel, filterWithImages } from "@/lib/prompt-query";
 import { serializeJsonLdForScript } from "@/lib/json-ld";
 import { buildModelHubJsonLd, isIndexableModelSlug, type IndexableModelSlug } from "@/lib/seo";
 import { getSiteBaseUrl } from "@/lib/site";
@@ -33,7 +33,8 @@ export async function generateMetadata({
   const model = raw as IndexableModelSlug;
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const isEn = loc === "en";
-  const { prompts } = getPromptsData();
+  const { prompts: allPrompts } = getPromptsData();
+  const prompts = filterWithImages(allPrompts);
   const count = prompts.filter((p) => getPromptModel(p) === model).length;
 
   const title =
@@ -96,7 +97,7 @@ export default async function ModelHubPage({
   const model = raw as IndexableModelSlug;
   const loc = (locale === "en" ? "en" : "zh") as Locale;
   const data = getPromptsData();
-  const { prompts } = data;
+  const prompts = filterWithImages(data.prompts);
   const baseUrl = getSiteBaseUrl();
   const count = prompts.filter((p) => getPromptModel(p) === model).length;
   const tagsForModelCorpus = getAllTags(filterByModel(prompts, model));
