@@ -1,4 +1,4 @@
-Last updated on 2026-08-24 00:45:13
+Last updated on 2026-08-31 02:33:29
 #### Please also check out 👉 [this awesome repo of Seedance 2.0 prompts!](https://github.com/ZeroLu/awesome-seedance) 👈
 
 # Awesome Nano Banana Pro 🍌
@@ -10,6 +10,12 @@ Last updated on 2026-08-24 00:45:13
 This repository focuses on **high-fidelity image prompts** sourced from X (Twitter), WeChat, Replicate, and top prompt engineers. Whether you are looking for **photorealistic portraits**, **stylized aesthetics**, or complex creative experiments, you will find the most effective inputs here to unlock the full potential of the model. 
 
 ### Sponsor1
+
+| Image | Description |
+| :---: | :--- |
+| <img width="400" alt="image" src="https://github.com/user-attachments/assets/39087148-9caa-4b37-8563-2da68df19713" /> | Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-awesome-nanobanana-pro) to get started. |
+
+### Sponsor2
 [![Cyberbara Ad](./assets/cyberbara-real-face-upload-banner.webp)](https://cyberbara.com/seedance2.0?utm_source=banana)
 
 > **💡 Struggle with Seedance 2.0 Face Detection?**
