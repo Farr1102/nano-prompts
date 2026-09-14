@@ -1,6 +1,6 @@
 # Awesome GPT Image 2 🕶️
 
-Last updated on 260907 03:54:55 UTC
+Last updated on 260914 04:18:09 UTC
 
 <img width="100%" alt="Awesome GPT Image 2 Header Banner" src="assets/banner/readme-header-16x9.png" />
 
@@ -8,11 +8,19 @@ Last updated on 260907 03:54:55 UTC
 [![Stars](https://img.shields.io/github/stars/ZeroLu/awesome-gpt-image?style=flat-square)](https://github.com/ZeroLu/awesome-gpt-image/stargazers)
 [![AtomGitStars](https://atomgit.com/ZeroLuAtom/awesome-gpt-image/star/badge.svg)](https://atomgit.com/ZeroLuAtom/awesome-gpt-image)
 
+<a href="https://trendshift.io/repositories/26403?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-26403" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/26403/daily?language=Python" alt="ZeroLu%2Fawesome-gpt-image | Trendshift" width="250" height="55"/></a>
+
 Languages: [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md)
 
 A curated collection of the best GPT Image 2 prompts and examples. Your go-to resource for mastering prompt engineering and exploring the creative potential of OpenAI's GPT Image 2 model.
 
 This repository focuses on high-fidelity image prompts sourced from X (Twitter) and the community. Whether you are looking for photorealistic game screenshots, stylized aesthetics, or complex creative experiments, you will find the most effective inputs here to unlock the full potential of GPT Image 2.
+
+### Sponsor
+
+| Image | Description |
+| :---: | :--- |
+| <img width="400" alt="APIMart" src="https://github.com/user-attachments/assets/39087148-9caa-4b37-8563-2da68df19713" /> | Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image & video generation — GPT-Image-2 from $0.006/image, 160+ images per dollar. One async API covers both image and video: submit a task, get an ID, fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code. Pay-as-you-go with no monthly fee — [sign up here](https://go.apimart.ai/gh-awesome-gpt-image) to get started. |
 
 ## Why GPT Image 2?
 GPT Image 2 represents a significant upgrade from version 1.5, offering:
@@ -25,7 +33,7 @@ GPT Image 2 represents a significant upgrade from version 1.5, offering:
 
 ## [Click here to view the web version of this prompt library](https://cyberbara.com/gpt-image-prompt-library?utm_source=gpt-image-banner)
 
-[<img width="100%" alt="GPT Image Prompt Library Screenshot" src="assets/banner/gpt-image-prompt-library-screenshot.jpg" />](https://cyberbara.com/gpt-image-prompt-library?utm_source=gpt-image-banner)
+[<img width="100%" alt="GPT Image Prompt Library Screenshot" src="assets/banner/cyberbara-promo.png" />](https://cyberbara.com/gpt-image-prompt-library?utm_source=gpt-image-banner)
 
 ## Table of Contents
 - [📷 Photography & Photorealism](#-photography--photorealism)
